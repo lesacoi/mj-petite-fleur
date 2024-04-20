@@ -1,5 +1,5 @@
-# mj-beau-danube-bleu
-Musical Juggling Website showing how to juggle "Le Beau Danube bleu"
+# mj-petite-fleur
+Musical Juggling Website showing how to juggle "Petite Fleur"
 
 ## Local install (dev)
 
