@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { Object3DHelper } from "./PointHelper";
+import { Object3DHelper } from "./Object3DHelper";
 
 const canvas = document.querySelector("#simulator_canvas")!;
 const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
