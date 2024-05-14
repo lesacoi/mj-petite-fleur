@@ -1,9 +1,10 @@
-import { Object3D, AxesHelper, Mesh, SphereGeometry, MeshBasicMaterial } from "three";
+import { AxesHelper, Mesh, SphereGeometry, MeshBasicMaterial, Group } from "three";
 
-class Object3DHelper {
+class Object3DHelper extends Group {
     mesh?: Mesh;
     axes?: AxesHelper;
-    constructor(obj: Object3D, show_point = true, color = 0x000000, show_axes = true) {
+    constructor(show_point = true, color = 0x000000, show_axes = true) {
+        super();
         if (show_point) {
             const geometry = new SphereGeometry(0.1, 4, 2);
             const material = new MeshBasicMaterial({
@@ -13,13 +14,11 @@ class Object3DHelper {
                 color: color
             });
             const mesh = new Mesh(geometry, material);
-            this.mesh = mesh;
-            obj.add(mesh);
+            this.add(mesh);
         }
         if (show_axes) {
             const axes = new AxesHelper(0.15);
-            this.axes = axes;
-            obj.add(axes);
+            this.add(axes);
         }
     }
 }

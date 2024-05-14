@@ -6,24 +6,19 @@ const canvas = document.querySelector("#simulator_canvas")!;
 const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 //NOT RECOMMENDED
 //renderer.setPixelRatio(window.devicePixelRatio);
-console.log(`window.devicePixelRatio = ${window.devicePixelRatio}`);
+//console.log(`window.devicePixelRatio = ${window.devicePixelRatio}`);
 
-export const x = 1;
-
-const fov = 75;
-const aspect = canvas.clientWidth / canvas.clientHeight; // the canvas default
-const near = 0.1; //TODO modify later
-const far = 50; //TODO modify later
-const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+const aspect = canvas.clientWidth / canvas.clientHeight;
+const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 50);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-camera.position.set(0, 0, 2);
+camera.position.set(-1, 2, 5);
+controls.target.set(0, 0, 0);
 controls.update();
 
 const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(0x555555);
-
 const axes_helper = new THREE.AxesHelper(1.5);
 axes_helper.position.y = 0.001;
 scene.add(axes_helper);
@@ -32,7 +27,7 @@ scene.add(grid_helper);
 
 const obj_test = new THREE.Object3D();
 scene.add(obj_test);
-new Object3DHelper(obj_test);
+obj_test.add(new Object3DHelper());
 obj_test.position.set(0, 3, 0);
 
 {
@@ -77,6 +72,8 @@ function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
     }
     return needResize;
 }
+
+let stop = false;
 
 function render(time: number) {
     time *= 0.001; // convert time to seconds
