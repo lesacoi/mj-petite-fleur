@@ -1,8 +1,6 @@
 import { AxesHelper, Mesh, SphereGeometry, MeshBasicMaterial, Group } from "three";
 
 class Object3DHelper extends Group {
-    mesh?: Mesh;
-    axes?: AxesHelper;
     constructor(show_point = true, color = 0x000000, show_axes = true) {
         super();
         if (show_point) {

@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@types/functional-red-black-tree": "^1.0.6",
     "@types/three": "^0.163.0",
     "eslint": "8",
     "eslint-config-prettier": "^9.1.0",
@@ -21,6 +22,8 @@
     "vite": "^5.2.0"
   },
   "dependencies": {
+    "functional-red-black-tree": "^1.0.1",
+    "mathjs": "^12.4.2",
     "three": "^0.163.0"
   }
 }
