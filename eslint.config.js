@@ -21,7 +21,8 @@ export default tseslint.config(
             },
         rules: {
             "@typescript-eslint/no-non-null-assertion": "off",
-            "@typescript-eslint/restrict-template-expressions": "off"
+            "@typescript-eslint/restrict-template-expressions": "off",
+            "@typescript-eslint/consistent-type-definitions": "off"
         }
     },
 );

@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Object3DHelper } from "./Object3DHelper";
 import createRBTree from "functional-red-black-tree";
 import { create, all } from "mathjs";
+import { compressNormals } from "three/examples/jsm/utils/GeometryCompressionUtils.js";
 
 const math = create(all, {});
 
@@ -154,11 +155,11 @@ function matjs_matrix_to_three_vector3(mat: math.Matrix): THREE.Vector3 {
     );
 }
 
-interface EventData {
+type EventData = {
     pos: THREE.Vector3;
     dpos: THREE.Vector3;
     time: number;
-}
+};
 
 type RBTree<K, V> = createRBTree.Tree<K, V>;
 
@@ -204,50 +205,6 @@ function get_hand_position(hand_idx: number, time: number): THREE.Vector3 {
             time
         )
     );
-}
-
-const g = 9.81;
-
-function get_airborne_ball_position(
-    pos0: THREE.Vector3,
-    t0: number,
-    pos1: THREE.Vector3,
-    t1: number,
-    t: number
-): THREE.Vector3 {
-    const v0x = (pos1.x - pos0.x) / (t1 - t0);
-    const v0z = (pos1.z - pos0.z) / (t1 - t0);
-    const v0y = (((t1 - t0) * g) ** 2 - 2 * g * (pos1.y - pos0.y)) / (2 * (t1 - t0));
-    const v0 = new THREE.Vector3(v0x, v0y, v0z);
-    return new THREE.Vector3(
-        v0.x * (t - t0) + pos0.x,
-        (-g / 2) * (t - t0) ** 2 + v0.y * (t - t0) + pos0.y,
-        v0.z * (t - t0) + pos0.z
-    );
-}
-
-function get_held_ball_position(hand_idx: number, t: number): THREE.Vector3 {
-    return get_hand_position(hand_idx, t);
-}
-
-//TODO : Looping mode and non looping mode ?
-// To be able to juggle non musical things ?
-function get_ball_position(ball, ball_idx, time) {
-    const iter_before = ball_events[ball_idx].le(time);
-    const t0 = iter_before.key!;
-    const { pos: pos0, dpos: dpos0 } = iter_before.value!;
-    const iter_after = hand_events[hand_idx].le(time);
-    const t1 = iter_after.key!;
-    const { pos: pos1, dpos: dpos1 } = iter_after.value!;
-    if (ball.status === "AIRBORNE") {
-        //get_airborne_ball_position();
-    } else if (ball.status === "IN_HAND") {
-        //get_held_ball_position();
-    } else if (ball.status === "ON_TABLE") {
-        throw new Error("Table Not Implemented yet.");
-    } else {
-        throw new Error("Status not understood.");
-    }
 }
 
 const obj_test = new THREE.Object3D();
@@ -316,6 +273,15 @@ function render(time: number) {
     renderer.render(scene, camera);
 
     requestAnimationFrame(render);
+
+    /*
+    hands.forEach((hand, hand_idx) => {
+        hand.position.set(get_hand_position(t, hand_idx))
+    })
+    balls.forEach((ball, ball_idx) => {
+        ball.position.set(get_ball_position(t, ball_idx))
+    })
+    */
 }
 
 requestAnimationFrame(render);
