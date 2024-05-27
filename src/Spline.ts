@@ -1,5 +1,6 @@
 import { Matrix, Structure } from "./Matrix";
 import { createRBTree, RBTree } from "./RBTree";
+import { NUMBERS_STRUCTURE } from "./constants";
 
 //TODO : Assumes at least 1 element.
 //TODO : To geneeralize to splines, rename points by parameter ?
@@ -10,12 +11,6 @@ class CubicHermiteSpline<T> {
     knots: number[];
     tree: RBTree<number, number>;
     structure: Structure<T, number>;
-    static numbers_structure: Structure<number, number> = {
-        add: (a: number, b: number) => a + b,
-        multiply: (a: number, b: number) => a * b,
-        multiply_by_scalar: (a: number, b: number) => a * b,
-        zero: 0
-    };
 
     constructor(structure: Structure<T, number>, points: T[], dpoints: T[], knots?: number[]) {
         if (points.length !== dpoints.length) {
@@ -81,7 +76,7 @@ class CubicHermiteSpline<T> {
         ];
         const transformation_mat = new Matrix<number, number>(
             transformation_data,
-            CubicHermiteSpline.numbers_structure
+            NUMBERS_STRUCTURE
         );
 
         // Creating parameters vector

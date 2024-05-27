@@ -1,12 +1,11 @@
 import * as THREE from "three";
 import { createRBTree, RBTree } from "./RBTree";
 import { Hand } from "./Hand";
+import { GRAVITY } from "./constants";
 
 // function create_audio(note_name: string): HTMLAudioElement {
 //     throw new Error("Not implemented");
 // }
-
-const GRAVITY = 9.81;
 
 type AirborneEvent = {
     status: "AIRBORNE";
