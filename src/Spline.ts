@@ -91,10 +91,7 @@ class CubicHermiteSpline<T> {
         // Creating vector of times
         const time_nor = (time - prev_time) / (next_time - prev_time);
         const times_data = [[time_nor ** 3, time_nor ** 2, time_nor ** 1, time_nor ** 0]];
-        const times_mat = new Matrix<number, number>(
-            times_data,
-            CubicHermiteSpline.numbers_structure
-        );
+        const times_mat = new Matrix<number, number>(times_data, NUMBERS_STRUCTURE);
 
         // Computing the interpolation. Result has only 1 element
         const res = Matrix.multiply_matrix_of_scalars_by_matrix(
