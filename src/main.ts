@@ -2,10 +2,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Object3DHelper } from "./Object3DHelper";
 import createRBTree from "functional-red-black-tree";
-import { create, all } from "mathjs";
-import { compressNormals } from "three/examples/jsm/utils/GeometryCompressionUtils.js";
-
-const math = create(all, {});
 
 const canvas = document.querySelector("#simulator_canvas")!;
 const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
@@ -50,116 +46,20 @@ const siteswap_unit_time = 0.5;
 const throw_height = 3;
 const dwell_time = 0.5;
 
-class BallEvent {
-    start_time: number;
-    end_time: number;
-    constructor(start_time: number, end_time: number) {
-        this.start_time = start_time;
-        this.end_time = end_time;
-    }
-    get_position(t: number) {
-        throw new Error("Must be overriden by children classes.");
-    }
-}
-class Held extends BallEvent {
-    hand: number;
-    constructor(start_time: number, end_time: number, hand: number) {
-        super(start_time, end_time);
-        this.hand = hand;
-    }
-    get_position(t: number) {
-        return t;
-    }
-}
-class Airborne extends BallEvent {
-    siteswap_height: number;
-    hand0: number;
-    hand1: number;
-    constructor(start_time: number, end_time: number, hand0: number, hand1: number) {
-        super(start_time, end_time);
-        this.siteswap_height = 3;
-        this.hand0 = hand0;
-        this.hand1 = hand1;
-    }
-}
-
-/**
- * Multiplies a matrix of scalars by a vector of matrices.
- * @param A a matrix of scalars (numbers).
- * @param B an array of matrices.
- * @returns
- */
-function multiply_matrix_of_scalars_by_vector_of_matrices(
-    A: math.Matrix,
-    B: math.Matrix[]
-): math.Matrix[] {
-    if (A.size()[1] !== B.length) {
-        throw new Error("Incompatible multiplication sizes.");
-    }
-    const C: math.Matrix[] = [];
-    for (let i = 0; i < A.size()[0]; i++) {
-        let coeff = math.matrix(math.zeros(B[0].size()));
-        for (let j = 0; j < B.length; j++) {
-            coeff = math.add(coeff, math.multiply(A.get([i, j]), B[j]));
-        }
-        C.push(coeff);
-    }
-    return C;
-}
-
-/**
- * Interpolates the non uniform cubic hermite spline given the following :
- * @param pos0 the initial value.
- * @param dpos0 the velocity at that first value.
- * @param t0 the time at that first value.
- * @param pos1 the final value.
- * @param dpos1 the velocity at that final value.
- * @param t1 the time at that final value.
- * @param t the time (between t0 and t1) to interpolate.
- * @returns the interpolated value.
- */
-function cubic_hermite_spline(
-    pos0: math.Matrix,
-    dpos0: math.Matrix,
-    t0: number,
-    pos1: math.Matrix,
-    dpos1: math.Matrix,
-    t1: number,
-    t: number
-): math.Matrix {
-    const dt = t1 - t0;
-    const mat = math.matrix([
-        [2, -2, dt, dt],
-        [-3, 3, -2 * dt, dt],
-        [0, 0, 1, 0],
-        [1, 0, 0, 0]
-    ]);
-    const params_mat = [pos0, pos1, dpos0, dpos1];
-    const t_nor = (t - t0) / (t1 - t0);
-    const times_mat = math.matrix([t_nor ** 3, t_nor ** 2, t_nor ** 1, t_nor ** 0]);
-    return multiply_matrix_of_scalars_by_vector_of_matrices(
-        math.multiply(times_mat, mat),
-        params_mat
-    )[0];
-}
-
-function three_vector3_to_matjs_matrix(vec: THREE.Vector3Like): math.Matrix {
-    return math.matrix([vec.x, vec.y, vec.z]);
-}
-
-function matjs_matrix_to_three_vector3(mat: math.Matrix): THREE.Vector3 {
-    return new THREE.Vector3(
-        mat.get([0]) as number,
-        mat.get([1]) as number,
-        mat.get([2]) as number
-    );
-}
-
 type EventData = {
     pos: THREE.Vector3;
     dpos: THREE.Vector3;
     time: number;
 };
+
+jugglers_origin: THREE.Vector3;
+min_distance_to_origin: THREE.Vector3;
+max_distance_to_origin: THREE.Vector3;
+arm_length: number;
+forearm_length: number;
+distance_to_juggling_plane: number;
+
+
 
 type RBTree<K, V> = createRBTree.Tree<K, V>;
 
@@ -184,27 +84,6 @@ function create_hand_events(
 ): RBTree<number, EventData>[] {
     const hand_events: RBTree<number, EventData>[] = [];
 }*/
-
-// Rename to "positon" ?
-//TODO : Test if INFINITY causes a problem...
-function get_hand_position(hand_idx: number, time: number): THREE.Vector3 {
-    const iter_before = hand_events[hand_idx].le(time);
-    const t0 = iter_before.key!;
-    const { pos: pos0, dpos: dpos0 } = iter_before.value!;
-    const iter_after = hand_events[hand_idx].le(time);
-    const t1 = iter_after.key!;
-    const { pos: pos1, dpos: dpos1 } = iter_after.value!;
-    return matjs_matrix_to_three_vector3(
-        cubic_hermite_spline(
-            three_vector3_to_matjs_matrix(pos0),
-            three_vector3_to_matjs_matrix(dpos0),
-            t0,
-            three_vector3_to_matjs_matrix(pos1),
-            three_vector3_to_matjs_matrix(dpos1),
-            t1,
-            time
-        )
-    );
 }
 
 const obj_test = new THREE.Object3D();
