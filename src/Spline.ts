@@ -40,8 +40,14 @@ class CubicHermiteSpline<T> {
         this.structure = structure;
     }
 
-    interpolate(time: number): T {
+    prev_next_time_idx(time: number): {
+        prev_time: number;
+        next_time: number;
+        prev_idx: number;
+        next_idx: number;
+    } {
         // Handle cases where time outside of knots range.
+        //TODO : DO that after the prev/next it have ben computed ?
         if (time < this.knots[0]) {
             time = this.knots[0];
         } else if (time > this.knots[this.knots.length - 1]) {
@@ -64,33 +70,66 @@ class CubicHermiteSpline<T> {
         ) {
             throw new Error("Something went wrong...");
         }
+        return {
+            prev_time: prev_time,
+            next_time: next_time,
+            prev_idx: prev_idx,
+            next_idx: next_idx
+        };
+    }
 
-        // Creating transformation matrix
-        const dt = next_time - prev_time;
-
+    get_transformation_matrix(dt: number): Matrix<number, number> {
         const transformation_data = [
             [2, -2, dt, dt],
             [-3, 3, -2 * dt, dt],
             [0, 0, 1, 0],
             [1, 0, 0, 0]
         ];
-        const transformation_mat = new Matrix<number, number>(
-            transformation_data,
-            NUMBERS_STRUCTURE
-        );
+        return new Matrix<number, number>(transformation_data, NUMBERS_STRUCTURE);
+    }
 
-        // Creating parameters vector
+    get_param_matrix(prev_idx: number, next_idx: number) {
         const param_data = [
             [this.points[prev_idx]],
             [this.points[next_idx]],
             [this.dpoints[prev_idx]],
             [this.dpoints[next_idx]]
         ];
-        const param_mat = new Matrix<T, number>(param_data, this.structure);
+        return new Matrix<T, number>(param_data, this.structure);
+    }
 
+    interpolate(time: number): T {
+        const { prev_time, next_time, prev_idx, next_idx } = this.prev_next_time_idx(time);
+
+        // Creating transformation matrix
+        const dt = next_time - prev_time;
+        const transformation_mat = this.get_transformation_matrix(dt);
+        // Creating parameters vector
+        const param_mat = this.get_param_matrix(prev_idx, next_idx);
         // Creating vector of times
         const time_nor = (time - prev_time) / (next_time - prev_time);
         const times_data = [[time_nor ** 3, time_nor ** 2, time_nor ** 1, time_nor ** 0]];
+        const times_mat = new Matrix<number, number>(times_data, NUMBERS_STRUCTURE);
+
+        // Computing the interpolation. Result has only 1 element
+        const res = Matrix.multiply_matrix_of_scalars_by_matrix(
+            times_mat.multiply(transformation_mat),
+            param_mat
+        );
+        return res.data[0][0];
+    }
+
+    velocity(time: number): T {
+        const { prev_time, next_time, prev_idx, next_idx } = this.prev_next_time_idx(time);
+
+        // Creating transformation matrix
+        const dt = next_time - prev_time;
+        const transformation_mat = this.get_transformation_matrix(dt);
+        // Creating parameters vector
+        const param_mat = this.get_param_matrix(prev_idx, next_idx);
+        // Creating vector of times
+        const time_nor = (time - prev_time) / (next_time - prev_time);
+        const times_data = [[3 * time_nor ** 2, 2 * time_nor, 1, 0]];
         const times_mat = new Matrix<number, number>(times_data, NUMBERS_STRUCTURE);
 
         // Computing the interpolation. Result has only 1 element
