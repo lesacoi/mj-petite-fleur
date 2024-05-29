@@ -1,37 +1,22 @@
 import * as THREE from "three";
 import { createRBTree, RBTree } from "./RBTree";
-import { Ball } from "./Ball";
 import { CubicHermiteSpline } from "./Spline";
 import { GRAVITY, VECTOR3_STRUCTURE } from "./constants";
-//import { Juggler } from "./Juggler";
+import { ThrowEvent, CatchEvent } from "./Timeline";
 
-const { add: V3ADD, multiply_by_scalar: V3SCA } = VECTOR3_STRUCTURE;
+// TODO : Avoiding circular references is a mess...
+// It makes it so this.throw_to_catch_event has to be called from the hand where the event happens else it leads to nonsense...
+// Cleaner to have catch/throwevents weakly reference each other ?
+// Create custom weakref to be simpler ?
 
-type CatchEvent = {
-    status: "CATCH";
-    time: number;
-    ball: Ball;
-    unit_time: number;
-    throw_time: number;
-    throw_hand: Hand;
-    throw_unit_time: number;
-};
+//TODO : Change the fact that all methods have get in front of them
 
-type ThrowEvent = {
-    status: "THROW";
-    time: number;
-    ball: Ball;
-    unit_time: number;
-    catch_time: number;
-    catch_hand: Hand;
-    catch_unit_time: number;
-};
+const { multiply_by_scalar: V3SCA } = VECTOR3_STRUCTURE;
 
 type HandPhysicsHandling = {
     min_dist: number;
     max_dist: number;
     is_right_hand: boolean;
-    juggler_origin: THREE.Vector3;
     up_vector: THREE.Vector3;
     right_vector: THREE.Vector3;
 };
@@ -41,17 +26,17 @@ class Hand {
     geometry: THREE.BufferGeometry;
     material: THREE.MeshPhongMaterial;
     mesh: THREE.Mesh;
-    timeline: RBTree<number, CatchEvent | ThrowEvent>;
+    timeline: RBTree<number, ThrowEvent | CatchEvent>;
     min_dist: number;
     max_dist: number;
     is_right_hand: boolean;
-    juggler_origin: THREE.Vector3;
     up_vector: THREE.Vector3;
     right_vector: THREE.Vector3;
 
+    // Constructs hand ONLY FROM THE JUGGLING PANE ORIGIN
     constructor(
         hand_physics_handling: HandPhysicsHandling,
-        timeline?: RBTree<number, CatchEvent | ThrowEvent>
+        timeline?: RBTree<number, ThrowEvent | CatchEvent>
     ) {
         this.geometry = new THREE.SphereGeometry(0.1, 8, 4);
         this.material = new THREE.MeshPhongMaterial({ color: "black" });
@@ -64,67 +49,52 @@ class Hand {
         this.min_dist = hand_physics_handling.min_dist;
         this.max_dist = hand_physics_handling.max_dist;
         this.is_right_hand = hand_physics_handling.is_right_hand;
-        this.juggler_origin = hand_physics_handling.juggler_origin;
         this.up_vector = hand_physics_handling.up_vector;
         this.right_vector = hand_physics_handling.right_vector;
     }
 
-    get_rest_origin_distance(unit_time: number): number {
+    get_rest_position(unit_time: number): THREE.Vector3 {
         const t0 = 0.4;
         const alpha = 9 / 10;
-        return this.max_dist + (1 - alpha) ** (-unit_time / t0) * (this.max_dist - this.min_dist);
-    }
-
-    get_throw_rest_distance(rest_origin_distance: number): number {
-        return (1 / 3) * rest_origin_distance;
-    }
-
-    get_ball_event_position(event: CatchEvent | ThrowEvent): THREE.Vector3 {
+        const distance =
+            this.max_dist + (1 - alpha) ** (-unit_time / t0) * (this.max_dist - this.min_dist);
         const hand_sign = this.is_right_hand ? 1 : -1;
-        const throw_sign = event.status === "THROW" ? -1 : 1;
-        const rest_origin_distance = this.get_rest_origin_distance(event.unit_time);
-        const throw_rest_distance = this.get_throw_rest_distance(rest_origin_distance);
-        const point = V3ADD(
-            this.juggler_origin,
-            V3SCA(
-                hand_sign * (rest_origin_distance + throw_sign * throw_rest_distance),
-                this.right_vector
-            )
-        );
-        return point;
+        return V3SCA(hand_sign * distance, this.right_vector);
     }
 
-    get_ball_event_velocity(event: CatchEvent | ThrowEvent): THREE.Vector3 {
+    get_default_rest_position(): THREE.Vector3 {
+        const hand_sign = this.is_right_hand ? 1 : -1;
+        return V3SCA(hand_sign * this.max_dist, this.right_vector);
+    }
+
+    get_catch_throw_position(
+        event: ThrowEvent | CatchEvent,
+        rest_position: THREE.Vector3
+    ): THREE.Vector3 {
+        const throw_sign = event instanceof ThrowEvent ? -1 : 1;
+        return V3SCA(1 + throw_sign * (1 / 3), rest_position);
+    }
+
+    get_ball_event_position(event: ThrowEvent | CatchEvent): THREE.Vector3 {
+        const rest_position = this.get_rest_position(event.unit_time);
+        const event_position = this.get_catch_throw_position(event, rest_position);
+        return event_position;
+    }
+
+    get_ball_event_velocity(event: ThrowEvent | CatchEvent): THREE.Vector3 {
         let throw_pos: THREE.Vector3, catch_pos: THREE.Vector3;
         let thrown_sign: number;
         let flight_time: number;
-        if (event.status === "THROW") {
+        if (event instanceof ThrowEvent) {
             throw_pos = this.get_ball_event_position(event);
-            const catch_event: CatchEvent = {
-                status: "CATCH",
-                time: event.catch_time,
-                ball: event.ball,
-                unit_time: event.catch_unit_time,
-                throw_time: event.time,
-                throw_hand: this,
-                throw_unit_time: event.unit_time
-            };
-            catch_pos = event.catch_hand.get_ball_event_position(catch_event);
-            flight_time = event.catch_time - event.time;
+            //TODO Move method to clean this line ?
+            catch_pos = event.catch_event.hand.get_ball_event_position(event.catch_event);
+            flight_time = event.catch_event.time - event.time;
             thrown_sign = 1;
         } else {
             catch_pos = this.get_ball_event_position(event);
-            const throw_event: ThrowEvent = {
-                status: "THROW",
-                time: event.throw_time,
-                ball: event.ball,
-                unit_time: event.throw_unit_time,
-                catch_time: event.time,
-                catch_hand: this,
-                catch_unit_time: event.unit_time
-            };
-            throw_pos = event.throw_hand.get_ball_event_position(throw_event);
-            flight_time = event.time - event.throw_time;
+            throw_pos = event.throw_event.hand.get_ball_event_position(event.throw_event);
+            flight_time = event.time - event.throw_event.time;
             thrown_sign = -1;
         }
         return new THREE.Vector3(
@@ -141,12 +111,12 @@ class Hand {
         const next_event = this.timeline.gt(time).value;
 
         if (prev_event === undefined && next_event === undefined) {
-            //REST POSITION
-            throw new Error("TODO.");
+            return this.get_default_rest_position();
         }
         if (prev_event === undefined) {
             const points = [
-                //Rest position, this.get_ball_event_position(next_event)
+                this.get_default_rest_position,
+                this.get_ball_event_position(next_event)
             ];
             const dpoints = [new THREE.Vector3(0, 0, 0), this.get_ball_event_velocity(next_event!)];
             const knots = [next_event!.time - next_event!.unit_time, next_event!.time];
@@ -166,6 +136,10 @@ class Hand {
         const knots = [prev_event.time, next_event.time];
         const spline = new CubicHermiteSpline(VECTOR3_STRUCTURE, points, dpoints, knots);
         return spline.interpolate(time);
+    }
+
+    get_velocity(time: number): THREE.Vector3 {
+        return new THREE.Vector3(0, 0, 0);
     }
 
     /**

@@ -3,6 +3,18 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Object3DHelper } from "./Object3DHelper";
 import createRBTree from "functional-red-black-tree";
 
+let tree: RBTree<number, any> = createRBTree();
+tree = tree.insert(0, {});
+tree = tree.insert(1, {});
+let tree2 = tree.insert(2, {});
+tree.find(0).value!.x = 0;
+tree2.find(1).value!.y = 1;
+console.log(tree.find(0).value!.x);
+console.log(tree2.find(0).value!.x);
+console.log(tree.find(1).value!.y);
+console.log(tree2.find(1).value!.y);
+
+
 const canvas = document.querySelector("#simulator_canvas")!;
 const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 //NOT RECOMMENDED
@@ -52,13 +64,10 @@ type EventData = {
     time: number;
 };
 
-jugglers_origin: THREE.Vector3;
-min_distance_to_origin: THREE.Vector3;
-max_distance_to_origin: THREE.Vector3;
-arm_length: number;
-forearm_length: number;
-distance_to_juggling_plane: number;
-
+// scene.add(juggler);
+// juggler.add(juggling_origin);
+// juggling_origin.add(hand_target_right);
+// juggling_origin.add(hand_target_left);
 
 
 type RBTree<K, V> = createRBTree.Tree<K, V>;
@@ -83,8 +92,9 @@ function create_hand_events(
     balls_init_config: 
 ): RBTree<number, EventData>[] {
     const hand_events: RBTree<number, EventData>[] = [];
+    }
 }*/
-}
+
 
 const obj_test = new THREE.Object3D();
 scene.add(obj_test);
