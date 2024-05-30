@@ -5,6 +5,8 @@ import { createRBTree, RBTree } from "./RBTree";
 import { resizeRendererToDisplaySize, Simulator } from "./Simulator";
 import { Ball } from "./Ball";
 import { Juggler } from "./Juggler";
+import * as TWEAKPANE from "tweakpane";
+import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 
 const simulator = new Simulator("#simulator_canvas");
 
@@ -15,8 +17,39 @@ const scene = simulator.scene;
 const renderer = simulator.renderer;
 const camera = simulator.camera;
 simulator.scene.add(jugglers[0].mesh);
-requestAnimationFrame(simulator.render);
 
+const pane = new TWEAKPANE.Pane();
+pane.registerPlugin(EssentialsPlugin);
+const fpsGraph = pane.addBlade({
+    view: "fpsgraph",
+    label: "FPS",
+    rows: 2
+}) as EssentialsPlugin.FpsGraphBladeApi;
+const monitor = { time: 0 };
+pane.addBinding(monitor, "time", {
+    readonly: true
+});
+
+function render(time: number) {
+    fpsGraph.begin();
+    time *= 0.001; // convert time to seconds
+    monitor.time = time;
+    resizeRendererToDisplaySize(renderer, camera);
+
+    simulator.balls.forEach((ball) => {
+        ball.render(time);
+    });
+    simulator.jugglers.forEach((juggler) => {
+        juggler.render(time);
+    });
+
+    renderer.render(scene, camera);
+
+    fpsGraph.end();
+    requestAnimationFrame(render);
+}
+
+requestAnimationFrame(render);
 // height = height;
 // const basic_geometry = new THREE.BoxGeometry(width, height, depth, 1, 1, 1);
 // //this.geometry = new THREE.EdgesGeometry(basic_geometry);
