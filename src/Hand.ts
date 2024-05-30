@@ -8,10 +8,9 @@ import { JugglingEvent } from "./Timeline";
 
 const { add: V3ADD, multiply_by_scalar: V3SCA } = VECTOR3_STRUCTURE;
 
-type HandPhysicsHandling = {
+export type HandPhysicsHandling = {
     min_dist: number;
     max_dist: number;
-    is_right_hand: boolean;
     up_vector: THREE.Vector3;
     right_vector: THREE.Vector3;
 };
@@ -19,7 +18,7 @@ type HandPhysicsHandling = {
 class Hand {
     //juggler: Juggler;
     geometry: THREE.BufferGeometry;
-    material: THREE.MeshPhongMaterial;
+    material: THREE.Material;
     mesh: THREE.Mesh;
     timeline: RBTree<number, JugglingEvent>;
     min_dist: number;
@@ -31,6 +30,7 @@ class Hand {
     // Constructs hand ONLY FROM THE JUGGLING PANE ORIGIN
     constructor(
         hand_physics_handling: HandPhysicsHandling,
+        is_right_hand: boolean,
         timeline?: RBTree<number, JugglingEvent>
     ) {
         this.geometry = new THREE.SphereGeometry(0.1, 8, 4);
@@ -43,7 +43,7 @@ class Hand {
         }
         this.min_dist = hand_physics_handling.min_dist;
         this.max_dist = hand_physics_handling.max_dist;
-        this.is_right_hand = hand_physics_handling.is_right_hand;
+        this.is_right_hand = is_right_hand;
         this.up_vector = hand_physics_handling.up_vector;
         this.right_vector = hand_physics_handling.right_vector;
     }
@@ -128,6 +128,10 @@ class Hand {
         const spline = this.get_spline(prev_event, next_event);
         return spline.velocity(time);
     }
+
+    render = (time: number): void => {
+        this.mesh.position.copy(this.get_position(time));
+    };
 
     /**
      * Properly deletes the 3D resources. Call when instance is not needed anymore to free ressources.

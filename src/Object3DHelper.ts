@@ -1,7 +1,7 @@
 import { AxesHelper, Mesh, SphereGeometry, MeshBasicMaterial, Group } from "three";
 
 class Object3DHelper extends Group {
-    constructor(show_point = true, color = 0x000000, show_axes = true) {
+    constructor(show_point = true, color: number | string = 0x000000, show_axes = true) {
         super();
         if (show_point) {
             const geometry = new SphereGeometry(0.1, 4, 2);

@@ -74,13 +74,15 @@ class JugglingEvent {
     }
 
     //TODO: Offset the ball by its radius up ?
-    get_hand_position(): THREE.Vector3 {
-        return this.hand.get_site_position(this.unit_time, this.is_thrown);
+    //TODO: Telle what is local/global
+    get_hand_global_position(): THREE.Vector3 {
+        const local_position = this.hand.get_site_position(this.unit_time, this.is_thrown);
+        return this.hand.mesh.localToWorld(local_position);
     }
 
     get_ball_velocity(): THREE.Vector3 {
-        const pos0 = this.get_hand_position();
-        const pos1 = this.paired_event.get_hand_position();
+        const pos0 = this.get_hand_global_position();
+        const pos1 = this.paired_event.get_hand_global_position();
         const t0 = this.time;
         const t1 = this.paired_event.time;
         return Ball.get_velocity_at_event(pos0, t0, pos1, t1, this.is_thrown);
@@ -177,47 +179,6 @@ class JugglingEvent {
 //     constructor(time: number, unit_time: number, hand?: Hand, ball?: Ball) {
 //         super(time, unit_time, hand, ball);
 //     }
-// }
-
-// type CatchEvent = {
-//     status: "CATCH";
-//     time: number;
-//     ball: Ball;
-//     unit_time: number;
-//     hand?: CWeakRef<Hand>;
-//     throw_event?: CWeakRef<ThrowEvent>;
-// };
-
-// type ThrowEvent = {
-//     status: "THROW";
-//     time: number;
-//     ball: Ball;
-//     unit_time: number;
-//     hand?: CWeakRef<Hand>;
-//     catch_event?: CWeakRef<ThrowEvent>;
-// };
-
-// function throw_to_catch_event(event: ThrowEvent): CatchEvent {
-//     return {
-//         status: "CATCH",
-//         time: event.catch_time,
-//         ball: event.ball,
-//         unit_time: event.catch_unit_time,
-//         throw_time: event.time,
-//         throw_hand: this,
-//         throw_unit_time: event.unit_time
-//     };
-// }
-// function catch_to_throw_event(event: CatchEvent): ThrowEvent {
-//     return {
-//         status: "THROW",
-//         time: event.throw_time,
-//         ball: event.ball,
-//         unit_time: event.throw_unit_time,
-//         catch_time: event.time,
-//         catch_hand: this,
-//         catch_unit_time: event.unit_time
-//     };
 // }
 
 export { JugglingEvent };

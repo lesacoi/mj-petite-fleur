@@ -9,30 +9,16 @@ import { JugglingEvent } from "./Timeline";
 
 //TODO : Fusionner les évènements de main et de balles ?
 
-// type AirborneEvent = {
-//     status: "AIRBORNE";
-//     time: number;
-//     hand: Hand;
-//     //siteswap_height: number;
-//     destination_hand: Hand;
-// };
-
-// type HeldEvent = {
-//     status: "HELD";
-//     time: number;
-//     hand: Hand;
-// };
-
 class Ball {
-    color: number;
+    color: number | string;
     radius: number;
     geometry: THREE.BufferGeometry;
-    material: THREE.MeshPhongMaterial;
+    material: THREE.Material;
     mesh: THREE.Mesh;
     //sound: HTMLAudioElement | undefined = undefined;
     timeline: RBTree<number, JugglingEvent>;
 
-    constructor(color: number, radius: number, timeline?: RBTree<number, JugglingEvent>) {
+    constructor(color: number | string, radius: number, timeline?: RBTree<number, JugglingEvent>) {
         this.color = color;
         this.radius = radius;
         this.geometry = new THREE.SphereGeometry(radius, 8, 4);
@@ -83,9 +69,9 @@ class Ball {
         // Whatever the second is, we throw the ball looking at starting and ending sites.
         if (prev_event.is_thrown) {
             return Ball.get_airborne_position(
-                prev_event.get_hand_position(),
+                prev_event.get_hand_global_position(),
                 prev_event.time,
-                next_event.get_hand_position(),
+                next_event.get_hand_global_position(),
                 next_event.time,
                 time
             );
@@ -158,9 +144,9 @@ class Ball {
         // Cases where both events exist.
         if (prev_event.is_thrown) {
             return Ball.get_airborne_velocity(
-                prev_event.get_hand_position(),
+                prev_event.get_hand_global_position(),
                 prev_event.time,
-                next_event.get_hand_position(),
+                next_event.get_hand_global_position(),
                 next_event.time,
                 time
             );
@@ -168,6 +154,11 @@ class Ball {
             return prev_event.hand.get_velocity(time);
         }
     }
+
+    render = (time: number): void => {
+        //Receives the time in seconds.
+        this.mesh.position.copy(this.get_position(time));
+    };
 
     /**
      * Properly deletes the 3D resources. Call when instance is not needed anymore to free ressources.
