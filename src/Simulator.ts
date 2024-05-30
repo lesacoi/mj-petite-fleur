@@ -39,7 +39,7 @@ class Simulator {
         const aspect = canvas.clientWidth / canvas.clientHeight;
         const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 50);
         const controls = new OrbitControls(camera, renderer.domElement);
-        camera.position.set(-1, 2, 5);
+        camera.position.set(5, 2, 1);
         controls.target.set(0, 0, 0);
         controls.update();
 
@@ -67,6 +67,8 @@ class Simulator {
         this.jugglers = [];
     }
 
+    //TODO method to facilitate not having to add balls to the scene
+
     render = (time: number): void => {
         //TODO : Who should receive the time in seconds ? ball.render also ?
         time *= 0.001; // convert time to seconds
@@ -85,7 +87,6 @@ class Simulator {
     };
 }
 
-
 // function create_juggler_mesh() {
 //     const geometry = new THREE.CapsuleGeometry(0.5, 1.8);
 //     const material = new THREE.MeshPhongMaterial({ color: 0xffffff });
@@ -93,5 +94,4 @@ class Simulator {
 //     return juggler_mesh;
 // }
 
-
-export { Simulator };
+export { Simulator, resizeRendererToDisplaySize };

@@ -46,8 +46,7 @@ class CubicHermiteSpline<T> {
         prev_idx: number;
         next_idx: number;
     } {
-        // Handle cases where time outside of knots range.
-        //TODO : DO that after the prev/next it have ben computed ?
+        //TODO : It is taken care of in other functions that the time is in range. Remove this check ? This function ?
         if (time < this.knots[0]) {
             time = this.knots[0];
         } else if (time > this.knots[this.knots.length - 1]) {
@@ -99,6 +98,11 @@ class CubicHermiteSpline<T> {
     }
 
     interpolate(time: number): T {
+        if (time < this.knots[0]) {
+            return this.points[0];
+        } else if (time > this.knots[this.knots.length - 1]) {
+            return this.points[this.points.length - 1];
+        }
         const { prev_time, next_time, prev_idx, next_idx } = this.prev_next_time_idx(time);
 
         // Creating transformation matrix
@@ -120,6 +124,11 @@ class CubicHermiteSpline<T> {
     }
 
     velocity(time: number): T {
+        if (time <= this.knots[0]) {
+            return this.dpoints[0];
+        } else if (time >= this.knots[this.knots.length - 1]) {
+            return this.dpoints[this.points.length - 1];
+        }
         const { prev_time, next_time, prev_idx, next_idx } = this.prev_next_time_idx(time);
 
         // Creating transformation matrix
