@@ -12,33 +12,97 @@ import { SplineThree } from "./utils";
 import { Hand } from "./Hand";
 import { CubicHermiteSpline } from "./Spline";
 import { VECTOR3_STRUCTURE } from "./constants";
+import { BlurShaderUtils } from "three/examples/jsm/Addons.js";
 
 const simulator = new Simulator("#simulator_canvas");
 const scene = simulator.scene;
 const renderer = simulator.renderer;
 const camera = simulator.camera;
 
-simulator.jugglers = [new Juggler()];
-const juggler = simulator.jugglers[0];
-const right_hand = juggler.hands[0];
-const left_hand = juggler.hands[1];
+simulator.jugglers = [new Juggler(2.0), new Juggler(2.0)];
+const vincent = simulator.jugglers[0];
+const nicolas = simulator.jugglers[1];
+// const right_hand = juggler.hands[0];
+// const left_hand = juggler.hands[1];
+simulator.jugglers.forEach((juggler) => {
+    scene.add(juggler.mesh);
+});
 
-juggler.mesh.position.set(-1, 0, 0);
-simulator.scene.add(juggler.mesh);
+vincent.mesh.position.set(-1, 0, 1);
+vincent.mesh.rotateY(Math.PI / 2);
+nicolas.mesh.position.set(-1, 0, -1);
+nicolas.mesh.rotateY(-Math.PI / 2);
 
-simulator.balls = [new Ball("red", 0.08)];
-const ball = simulator.balls[0];
-scene.add(ball.mesh);
+simulator.balls = [new Ball("red", 0.08), new Ball("green", 0.08), new Ball("blue", 0.08)];
+const ball0 = simulator.balls[0];
+const ball1 = simulator.balls[1];
+const ball2 = simulator.balls[2];
+
+simulator.balls.forEach((ball) => {
+    scene.add(ball.mesh);
+});
+
+function lance(
+    ball: Ball,
+    time: number,
+    flight_time: number,
+    source: Hand,
+    target: Hand,
+    unit_time: number
+): void {
+    const ev1 = new JugglingEvent(time, unit_time, "THROW", source, ball);
+    const ev2 = new JugglingEvent(time + flight_time, unit_time, "CATCH", target, ball);
+    ev1.pair_with(ev2);
+    ball.timeline = ball.timeline.insert(ev1.time, ev1);
+    ball.timeline = ball.timeline.insert(ev2.time, ev2);
+    source.timeline = source.timeline.insert(ev1.time, ev1);
+    target.timeline = target.timeline.insert(ev2.time, ev2);
+}
+const right_hand = vincent.right_hand;
+const left_hand = vincent.left_hand;
+
+const u = 0.25;
+const d = u / 2;
+for (let i = 0; i < 100; i++) {
+    lance(simulator.balls[i % 3], 1 + i*u, 3* u - d, vincent.hands[i % 2], vincent.hands[(i + 1) % 2], u);
+}
+
+// lance(ball1, 1 + 1*u, 3 * u - d, left_hand, right_hand, u);
+// lance(ball2, 1 + 2*u, 3 * u - d, right_hand, left_hand, u);
+// lance(ball0, 1 + 3*u, 3 * u - d, left_hand, right_hand, u);
+// lance(ball1, 1 + 4*u, 3 * u - d, right_hand, left_hand, u);
+// lance(ball2, 1 + 5*u, 3 * u - d, left_hand, right_hand, u);
+// lance(ball0, 1, 1, right_hand, left_hand, 0.5);
+// lance(ball0, 1, 1, right_hand, left_hand, 0.5);
+// lance(ball0, 1, 1, right_hand, left_hand, 0.5);
+
 //TODO : Ball and Hand inherit Object3D For easier manipulation ?
 //TODO : How to have a ball taht stays in the hand ?
 
-const ev1 = new JugglingEvent(1, 1, "THROW", right_hand, ball);
-const ev2 = new JugglingEvent(2, 1, "CATCH", left_hand, ball);
-ev1.pair_with(ev2);
-ball.timeline = ball.timeline.insert(ev1.time, ev1);
-ball.timeline = ball.timeline.insert(ev2.time, ev2);
-right_hand.timeline = right_hand.timeline.insert(ev1.time, ev1);
-left_hand.timeline = left_hand.timeline.insert(ev2.time, ev2);
+// const ev1 = new JugglingEvent(1, 0.5, "THROW", vincent.right_hand, ball0);
+// const ev2 = new JugglingEvent(1.2, 0.5, "CATCH", nicolas.left_hand, ball0);
+// const ev3 = new JugglingEvent(2, 0.5, "THROW", vincent.left_hand, ball1);
+// const ev4 = new JugglingEvent(2.2, 0.5, "CATCH", vincent.left_hand, ball1);
+// const ev5 = new JugglingEvent(1, 0.5, "THROW", vincent.right_hand, ball0);
+// const ev6 = new JugglingEvent(1.4, 0.5, "CATCH", nicolas.left_hand, ball0);
+
+// //TODO: REmplacer l'appareillage par une recherche dans la timeline de la balle.
+// ev1.pair_with(ev2);
+// ev3.pair_with(ev4);
+// ev5.pair_with(ev6);
+// ball0.timeline = ball0.timeline.insert(ev1.time, ev1);
+// ball0.timeline = ball0.timeline.insert(ev2.time, ev2);
+// ball1.timeline = ball1.timeline.insert(ev3.time, ev3);
+// ball1.timeline = ball1.timeline.insert(ev4.time, ev4);
+// ball2.timeline = ball2.timeline.insert(ev5.time, ev5);
+// ball2.timeline = ball2.timeline.insert(ev6.time, ev6);
+
+// vincent.right_hand.timeline = vincent.right_hand.timeline.insert(ev1.time, ev1);
+// nicolas.left_hand.timeline = nicolas.left_hand.timeline.insert(ev2.time, ev2);
+// vincent.left_hand.timeline = vincent.left_hand.timeline.insert(ev3.time, ev3);
+// vincent.left_hand.timeline = vincent.left_hand.timeline.insert(ev4.time, ev4);
+// vincent.right_hand.timeline = vincent.right_hand.timeline.insert(ev5.time, ev5);
+// nicolas.left_hand.timeline = nicolas.left_hand.timeline.insert(ev6.time, ev6);
 
 // const curvepath = new THREE.CurvePath();
 // const curve1 = new SplineThree(right_hand.get_spline(undefined));

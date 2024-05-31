@@ -7,7 +7,9 @@ class Juggler {
     geometry: THREE.BufferGeometry;
     material: THREE.Material;
     mesh: THREE.Mesh;
-    hands: [Hand, Hand];
+    readonly hands: [Hand, Hand];
+    readonly right_hand: Hand;
+    readonly left_hand: Hand;
     juggling_origin: THREE.Object3D;
 
     constructor(height = 1.8, width = 0.5, depth = 0.3, arm_length = 0.4) {
@@ -30,10 +32,10 @@ class Juggler {
             right_vector: new THREE.Vector3(0, 0, 1),
             origin_object: this.juggling_origin
         };
-        this.hands = [
-            new Hand(hand_physics_handling, true),
-            new Hand(hand_physics_handling, false)
-        ];
+        this.right_hand = new Hand(hand_physics_handling, true);
+        this.left_hand = new Hand(hand_physics_handling, false);
+        this.hands = [this.right_hand, this.left_hand];
+
         const helper = new Object3DHelper();
         this.juggling_origin.add(helper);
         this.juggling_origin.position.set(arm_length, 1.8 - 0.3 - arm_length, 0);

@@ -38,6 +38,7 @@ class Hand {
         this.geometry = new THREE.SphereGeometry(0.05, 8, 4);
         this.material = new THREE.MeshPhongMaterial({ color: "black" });
         this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.visible = false;
         if (timeline === undefined) {
             this.timeline = createRBTree();
         } else {

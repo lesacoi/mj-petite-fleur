@@ -39,8 +39,8 @@ class Simulator {
         const aspect = canvas.clientWidth / canvas.clientHeight;
         const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 50);
         const controls = new OrbitControls(camera, renderer.domElement);
-        camera.position.set(3, 2, 1);
-        controls.target.set(0, 1, 0);
+        camera.position.set(1, 1, -0.6);
+        controls.target.set(0, 1, -0.6);
         controls.update();
 
         scene.background = new THREE.Color(0x555555);
