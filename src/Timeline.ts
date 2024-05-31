@@ -8,6 +8,9 @@ import * as THREE from "three";
 // (légérement au dessus par exemple)
 //TODO : Really needs references if can be gathered from the ball timeline ?
 
+//TODO : Timeline fait intermédiaire entre main et balle. Balle ne peut pas accéder main, et inversement ?
+// Mais comment gérer le temps ?
+
 class JugglingEvent {
     time: number;
     unit_time: number;
@@ -77,7 +80,7 @@ class JugglingEvent {
     //TODO: Telle what is local/global
     get_hand_global_position(): THREE.Vector3 {
         const local_position = this.hand.get_site_position(this.unit_time, this.is_thrown);
-        return this.hand.mesh.localToWorld(local_position);
+        return this.hand.origin_object.localToWorld(local_position);
     }
 
     get_ball_velocity(): THREE.Vector3 {
@@ -85,7 +88,11 @@ class JugglingEvent {
         const pos1 = this.paired_event.get_hand_global_position();
         const t0 = this.time;
         const t1 = this.paired_event.time;
-        return Ball.get_velocity_at_event(pos0, t0, pos1, t1, this.is_thrown);
+        if (this.is_thrown) {
+            return Ball.get_velocity_at_event(pos0, t0, pos1, t1, this.is_thrown);
+        } else {
+            return Ball.get_velocity_at_event(pos1, t1, pos0, t0, this.is_thrown);
+        }
     }
 
     get is_thrown(): boolean {

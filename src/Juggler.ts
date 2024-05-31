@@ -22,18 +22,18 @@ class Juggler {
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         //this.wireframe = new THREE.LineSegments(this.geometry, this.material);
         //this.mesh.translateY(height / 2);
+        this.juggling_origin = new THREE.Object3D();
         const hand_physics_handling: HandPhysicsHandling = {
             min_dist: 0.05,
             max_dist: width / 2,
             up_vector: new THREE.Vector3(0, 1, 0),
-            right_vector: new THREE.Vector3(0, 0, 1)
+            right_vector: new THREE.Vector3(0, 0, 1),
+            origin_object: this.juggling_origin
         };
         this.hands = [
             new Hand(hand_physics_handling, true),
             new Hand(hand_physics_handling, false)
         ];
-
-        this.juggling_origin = new THREE.Object3D();
         const helper = new Object3DHelper();
         this.juggling_origin.add(helper);
         this.juggling_origin.position.set(arm_length, 1.8 - 0.3 - arm_length, 0);

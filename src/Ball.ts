@@ -10,8 +10,8 @@ import { JugglingEvent } from "./Timeline";
 //TODO : Fusionner les évènements de main et de balles ?
 
 class Ball {
-    color: number | string;
-    radius: number;
+    readonly color: number | string;
+    readonly radius: number;
     geometry: THREE.BufferGeometry;
     material: THREE.Material;
     mesh: THREE.Mesh;
@@ -56,13 +56,13 @@ class Ball {
             if (next_event!.is_caught) {
                 throw new Error("Ball is caught at the beginning without being thrown.");
             }
-            return next_event!.hand.get_position(time);
+            return next_event!.hand.get_global_position(time);
         }
         if (next_event === undefined) {
             if (prev_event.is_thrown) {
                 throw new Error("Ball is thrown at the end without being caught.");
             }
-            return prev_event.hand.get_position(time);
+            return prev_event.hand.get_global_position(time);
         }
 
         // Cases where both events exist.
@@ -76,7 +76,7 @@ class Ball {
                 time
             );
         } else {
-            return prev_event.hand.get_position(time);
+            return prev_event.hand.get_global_position(time);
         }
     }
 
@@ -87,10 +87,10 @@ class Ball {
         t1: number,
         is_thrown: boolean
     ): THREE.Vector3 {
-        const v0x = (pos1.x - pos0.x) / (t1 - t0);
-        const v0z = (pos1.z - pos0.z) / (t1 - t0);
-        const v0y =
-            (((t1 - t0) * GRAVITY) ** 2 - 2 * GRAVITY * (pos1.y - pos0.y)) / (2 * (t1 - t0));
+        const dt = t1 - t0;
+        const v0x = (pos1.x - pos0.x) / dt;
+        const v0z = (pos1.z - pos0.z) / dt;
+        const v0y = (dt * GRAVITY) / 2 + (pos1.y - pos0.y) / dt;
         const throw_sign = is_thrown ? 1 : -1;
         return new THREE.Vector3(v0x, throw_sign * v0y, v0z);
     }

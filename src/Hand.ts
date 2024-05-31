@@ -13,6 +13,7 @@ export type HandPhysicsHandling = {
     max_dist: number;
     up_vector: THREE.Vector3;
     right_vector: THREE.Vector3;
+    origin_object: THREE.Object3D;
 };
 
 class Hand {
@@ -21,11 +22,12 @@ class Hand {
     material: THREE.Material;
     mesh: THREE.Mesh;
     timeline: RBTree<number, JugglingEvent>;
-    min_dist: number;
-    max_dist: number;
-    is_right_hand: boolean;
-    up_vector: THREE.Vector3;
-    right_vector: THREE.Vector3;
+    readonly min_dist: number;
+    readonly max_dist: number;
+    readonly is_right_hand: boolean;
+    readonly up_vector: THREE.Vector3;
+    readonly right_vector: THREE.Vector3;
+    readonly origin_object: THREE.Object3D;
 
     // Constructs hand ONLY FROM THE JUGGLING PANE ORIGIN
     constructor(
@@ -33,7 +35,7 @@ class Hand {
         is_right_hand: boolean,
         timeline?: RBTree<number, JugglingEvent>
     ) {
-        this.geometry = new THREE.SphereGeometry(0.1, 8, 4);
+        this.geometry = new THREE.SphereGeometry(0.05, 8, 4);
         this.material = new THREE.MeshPhongMaterial({ color: "black" });
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         if (timeline === undefined) {
@@ -46,13 +48,14 @@ class Hand {
         this.is_right_hand = is_right_hand;
         this.up_vector = hand_physics_handling.up_vector;
         this.right_vector = hand_physics_handling.right_vector;
+        this.origin_object = hand_physics_handling.origin_object;
     }
 
     get_rest_position(unit_time: number): THREE.Vector3 {
         const t0 = 0.4;
         const alpha = 9 / 10;
         const distance =
-            this.max_dist + (1 - alpha) ** (-unit_time / t0) * (this.max_dist - this.min_dist);
+            this.min_dist + alpha ** (t0 / unit_time) * (this.max_dist - this.min_dist);
         const hand_sign = this.is_right_hand ? 1 : -1;
         return V3SCA(hand_sign * distance, this.right_vector);
     }
@@ -62,6 +65,8 @@ class Hand {
         return V3SCA(hand_sign * this.max_dist, this.right_vector);
     }
 
+    //TODO : Mettre des object3D qui s'updatent pour les rest/throw/catch sites ?
+    //Histoire de pouvoir les visualiser.
     get_rest_site_offset(
         unit_time: number,
         is_thrown: boolean,
@@ -80,7 +85,7 @@ class Hand {
         return V3ADD(rest_position, rest_site_offset);
     }
 
-    private get_spline(
+    get_spline(
         prev_event: JugglingEvent | undefined,
         next_event: JugglingEvent | undefined
     ): CubicHermiteSpline<THREE.Vector3> {
@@ -120,6 +125,13 @@ class Hand {
         const next_event = this.timeline.gt(time).value;
         const spline = this.get_spline(prev_event, next_event);
         return spline.interpolate(time);
+    }
+
+    //TODO : Pas ouf que _origin_object soit utilisé ici. Changer la classe ?
+    //Faire uniquement avec mesh en faisant offset ?
+    //Note : suppose que le jongleur ne bouge pas.
+    get_global_position(time: number): THREE.Vector3 {
+        return this.origin_object.localToWorld(this.get_position(time));
     }
 
     get_velocity(time: number): THREE.Vector3 {

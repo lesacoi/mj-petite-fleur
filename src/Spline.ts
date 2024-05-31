@@ -80,8 +80,8 @@ class CubicHermiteSpline<T> {
     get_transformation_matrix(dt: number): Matrix<number, number> {
         const transformation_data = [
             [2, -2, dt, dt],
-            [-3, 3, -2 * dt, dt],
-            [0, 0, 1, 0],
+            [-3, 3, -2 * dt, -dt],
+            [0, 0, dt, 0],
             [1, 0, 0, 0]
         ];
         return new Matrix<number, number>(transformation_data, NUMBERS_STRUCTURE);
@@ -98,9 +98,9 @@ class CubicHermiteSpline<T> {
     }
 
     interpolate(time: number): T {
-        if (time < this.knots[0]) {
+        if (time <= this.knots[0]) {
             return this.points[0];
-        } else if (time > this.knots[this.knots.length - 1]) {
+        } else if (time >= this.knots[this.knots.length - 1]) {
             return this.points[this.points.length - 1];
         }
         const { prev_time, next_time, prev_idx, next_idx } = this.prev_next_time_idx(time);

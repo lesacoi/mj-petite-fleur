@@ -7,16 +7,56 @@ import { Ball } from "./Ball";
 import { Juggler } from "./Juggler";
 import * as TWEAKPANE from "tweakpane";
 import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
+import { JugglingEvent } from "./Timeline";
+import { SplineThree } from "./utils";
+import { Hand } from "./Hand";
+import { CubicHermiteSpline } from "./Spline";
+import { VECTOR3_STRUCTURE } from "./constants";
 
 const simulator = new Simulator("#simulator_canvas");
-
-//const balls: Ball[] = [new Ball("red", 0.1)];
-const jugglers: Juggler[] = [new Juggler()];
-simulator.jugglers = jugglers;
 const scene = simulator.scene;
 const renderer = simulator.renderer;
 const camera = simulator.camera;
-simulator.scene.add(jugglers[0].mesh);
+
+simulator.jugglers = [new Juggler()];
+const juggler = simulator.jugglers[0];
+const right_hand = juggler.hands[0];
+const left_hand = juggler.hands[1];
+
+juggler.mesh.position.set(-1, 0, 0);
+simulator.scene.add(juggler.mesh);
+
+simulator.balls = [new Ball("red", 0.08)];
+const ball = simulator.balls[0];
+scene.add(ball.mesh);
+//TODO : Ball and Hand inherit Object3D For easier manipulation ?
+//TODO : How to have a ball taht stays in the hand ?
+
+const ev1 = new JugglingEvent(1, 1, "THROW", right_hand, ball);
+const ev2 = new JugglingEvent(2, 1, "CATCH", left_hand, ball);
+ev1.pair_with(ev2);
+ball.timeline = ball.timeline.insert(ev1.time, ev1);
+ball.timeline = ball.timeline.insert(ev2.time, ev2);
+right_hand.timeline = right_hand.timeline.insert(ev1.time, ev1);
+left_hand.timeline = left_hand.timeline.insert(ev2.time, ev2);
+
+// const curvepath = new THREE.CurvePath();
+// const curve1 = new SplineThree(right_hand.get_spline(undefined));
+
+const spline = new CubicHermiteSpline<THREE.Vector3>(
+    VECTOR3_STRUCTURE,
+    [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)],
+    [new THREE.Vector3(1, 1, 0), new THREE.Vector3(1, -1, 0)]
+);
+const curve = new SplineThree(spline);
+console.log(spline.interpolate(0));
+console.log(spline.interpolate(1));
+const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.01, 8, false);
+const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const tubeMesh = new THREE.Mesh(tubeGeometry, material);
+
+// Step 4: Add the Mesh to the Scene
+scene.add(tubeMesh);
 
 const pane = new TWEAKPANE.Pane();
 pane.registerPlugin(EssentialsPlugin);
