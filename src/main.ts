@@ -1,7 +1,4 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { Object3DHelper } from "./Object3DHelper";
-import { createRBTree, RBTree } from "./RBTree";
 import { resizeRendererToDisplaySize, Simulator } from "./Simulator";
 import { Ball } from "./Ball";
 import { Juggler } from "./Juggler";
@@ -58,14 +55,31 @@ function lance(
     source.timeline = source.timeline.insert(ev1.time, ev1);
     target.timeline = target.timeline.insert(ev2.time, ev2);
 }
-const right_hand = vincent.right_hand;
-const left_hand = vincent.left_hand;
 
-const u = 0.25;
-const d = u / 2;
-for (let i = 0; i < 100; i++) {
-    lance(simulator.balls[i % 3], 1 + i*u, 3* u - d, vincent.hands[i % 2], vincent.hands[(i + 1) % 2], u);
-}
+lance(ball0, 1, 1, vincent.right_hand, nicolas.left_hand, 0.5);
+const spline = vincent.right_hand.get_spline(
+    vincent.right_hand.timeline.lt(0.9).value,
+    vincent.right_hand.timeline.gt(0.9).value
+);
+const curve = new SplineThree(spline);
+const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.01, 8, false);
+const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const tubeMesh = new THREE.Mesh(tubeGeometry, material);
+scene.add(tubeMesh);
+
+// const u = 0.25;
+// const d = u / 2;
+// lance(ball0);
+// for (let i = 0; i < 100; i++) {
+//     lance(
+//         simulator.balls[i % 3],
+//         1 + i * u,
+//         3 * u - d,
+//         vincent.hands[i % 2],
+//         vincent.hands[(i + 1) % 2],
+//         u
+//     );
+// }
 
 // lance(ball1, 1 + 1*u, 3 * u - d, left_hand, right_hand, u);
 // lance(ball2, 1 + 2*u, 3 * u - d, right_hand, left_hand, u);
@@ -107,20 +121,18 @@ for (let i = 0; i < 100; i++) {
 // const curvepath = new THREE.CurvePath();
 // const curve1 = new SplineThree(right_hand.get_spline(undefined));
 
-const spline = new CubicHermiteSpline<THREE.Vector3>(
-    VECTOR3_STRUCTURE,
-    [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)],
-    [new THREE.Vector3(1, 1, 0), new THREE.Vector3(1, -1, 0)]
-);
-const curve = new SplineThree(spline);
-console.log(spline.interpolate(0));
-console.log(spline.interpolate(1));
-const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.01, 8, false);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const tubeMesh = new THREE.Mesh(tubeGeometry, material);
-
-// Step 4: Add the Mesh to the Scene
-scene.add(tubeMesh);
+// const spline = new CubicHermiteSpline<THREE.Vector3>(
+//     VECTOR3_STRUCTURE,
+//     [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)],
+//     [new THREE.Vector3(1, 1, 0), new THREE.Vector3(1, -1, 0)]
+// );
+// const curve = new SplineThree(spline);
+// console.log(spline.interpolate(0));
+// console.log(spline.interpolate(1));
+// const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.01, 8, false);
+// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+// const tubeMesh = new THREE.Mesh(tubeGeometry, material);
+// scene.add(tubeMesh);
 
 const pane = new TWEAKPANE.Pane();
 pane.registerPlugin(EssentialsPlugin);
@@ -134,9 +146,9 @@ pane.addBinding(monitor, "time", {
     readonly: true
 });
 
-function render(time: number) {
+function render(t: number) {
     fpsGraph.begin();
-    time *= 0.001; // convert time to seconds
+    const time = t * 0.001; // convert time to seconds
     monitor.time = time;
     resizeRendererToDisplaySize(renderer, camera);
 
@@ -153,6 +165,9 @@ function render(time: number) {
     requestAnimationFrame(render);
 }
 
+simulator.balls = simulator.balls.filter((ball) => {
+    return ball.timeline.length !== 0;
+});
 requestAnimationFrame(render);
 // height = height;
 // const basic_geometry = new THREE.BoxGeometry(width, height, depth, 1, 1, 1);
@@ -239,5 +254,3 @@ function create_hand_events(
     const hand_events: RBTree<number, EventData>[] = [];
     }
 }*/
-
-

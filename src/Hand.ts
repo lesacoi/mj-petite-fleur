@@ -38,7 +38,7 @@ class Hand {
         this.geometry = new THREE.SphereGeometry(0.05, 8, 4);
         this.material = new THREE.MeshPhongMaterial({ color: "black" });
         this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.mesh.visible = false;
+        // this.mesh.visible = false;
         if (timeline === undefined) {
             this.timeline = createRBTree();
         } else {
@@ -86,6 +86,10 @@ class Hand {
         return V3ADD(rest_position, rest_site_offset);
     }
 
+    world_to_local_velocity(vec: THREE.Vector3) {
+        return this.mesh.worldToLocal(vec).sub(this.mesh.worldToLocal(new THREE.Vector3(0, 0, 0)));
+    }
+
     get_spline(
         prev_event: JugglingEvent | undefined,
         next_event: JugglingEvent | undefined
@@ -100,28 +104,37 @@ class Hand {
                 this.get_rest_position(next_event!.unit_time),
                 this.get_site_position(next_event!.unit_time, next_event!.is_thrown)
             ];
-            dpoints = [new THREE.Vector3(0, 0, 0), next_event!.get_ball_velocity()];
+            dpoints = [
+                new THREE.Vector3(0, 0, 0),
+                this.world_to_local_velocity(next_event!.get_ball_velocity())
+            ];
             knots = [next_event!.time - next_event!.unit_time, next_event!.time];
         } else if (next_event === undefined) {
             points = [
                 this.get_site_position(prev_event.unit_time, prev_event.is_thrown),
                 this.get_rest_position(prev_event.unit_time)
             ];
-            dpoints = [prev_event.get_ball_velocity(), new THREE.Vector3(0, 0, 0)];
+            dpoints = [
+                this.world_to_local_velocity(prev_event.get_ball_velocity()),
+                new THREE.Vector3(0, 0, 0)
+            ];
             knots = [prev_event.time, prev_event.time + prev_event.unit_time];
         } else {
             points = [
                 this.get_site_position(prev_event.unit_time, prev_event.is_thrown),
                 this.get_site_position(next_event.unit_time, next_event.is_thrown)
             ];
-            dpoints = [prev_event.get_ball_velocity(), next_event.get_ball_velocity()];
+            dpoints = [
+                this.world_to_local_velocity(prev_event.get_ball_velocity()),
+                this.world_to_local_velocity(next_event.get_ball_velocity())
+            ];
             knots = [prev_event.time, next_event.time];
         }
         // TODO : Add a little bit of impact based on speed after throw / catch. Ou quand la ball sonne et qu'on la claque dans la main.
         return new CubicHermiteSpline(VECTOR3_STRUCTURE, points, dpoints, knots);
     }
 
-    get_position(time: number): THREE.Vector3 {
+    get_local_position(time: number): THREE.Vector3 {
         const prev_event = this.timeline.le(time).value;
         const next_event = this.timeline.gt(time).value;
         const spline = this.get_spline(prev_event, next_event);
@@ -132,18 +145,23 @@ class Hand {
     //Faire uniquement avec mesh en faisant offset ?
     //Note : suppose que le jongleur ne bouge pas.
     get_global_position(time: number): THREE.Vector3 {
-        return this.origin_object.localToWorld(this.get_position(time));
+        return this.origin_object.localToWorld(this.get_local_position(time));
     }
 
-    get_velocity(time: number): THREE.Vector3 {
+    get_local_velocity(time: number): THREE.Vector3 {
         const prev_event = this.timeline.le(time).value;
         const next_event = this.timeline.gt(time).value;
         const spline = this.get_spline(prev_event, next_event);
         return spline.velocity(time);
     }
 
+    get_global_velocity(time: number): THREE.Vector3 {
+        const vec = this.get_local_velocity(time);
+        return this.mesh.localToWorld(vec).sub(this.mesh.localToWorld(new THREE.Vector3(0, 0, 0)));
+    }
+
     render = (time: number): void => {
-        this.mesh.position.copy(this.get_position(time));
+        this.mesh.position.copy(this.get_local_position(time));
     };
 
     /**

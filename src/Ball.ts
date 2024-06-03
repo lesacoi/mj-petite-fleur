@@ -132,13 +132,13 @@ class Ball {
             if (next_event!.is_caught) {
                 throw new Error("Ball is caught at the beginning without being thrown.");
             }
-            return next_event!.hand.get_velocity(time);
+            return next_event!.hand.get_global_velocity(time);
         }
         if (next_event === undefined) {
             if (prev_event.is_thrown) {
                 throw new Error("Ball is thrown at the end without being caught.");
             }
-            return prev_event.hand.get_velocity(time);
+            return prev_event.hand.get_global_velocity(time);
         }
 
         // Cases where both events exist.
@@ -151,7 +151,7 @@ class Ball {
                 time
             );
         } else {
-            return prev_event.hand.get_velocity(time);
+            return prev_event.hand.get_global_velocity(time);
         }
     }
 
