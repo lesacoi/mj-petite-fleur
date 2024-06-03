@@ -86,6 +86,11 @@ class Hand {
         return V3ADD(rest_position, rest_site_offset);
     }
 
+    get_midpoint_up(unit_time: number) {
+        const rest_position = this.get_rest_position(unit_time);
+        return V3ADD(rest_position, V3SCA((1 / 3) * rest_position.length(), this.up_vector));
+    }
+
     world_to_local_velocity(vec: THREE.Vector3) {
         return this.mesh.worldToLocal(vec).sub(this.mesh.worldToLocal(new THREE.Vector3(0, 0, 0)));
     }
@@ -93,16 +98,11 @@ class Hand {
     get_spline(
         prev_event: JugglingEvent | undefined,
         next_event: JugglingEvent | undefined
-    ): QuinticHermiteSpline<THREE.Vector3> {
-        let points: THREE.Vector3[],
-            dpoints: THREE.Vector3[],
-            apoints: THREE.Vector3[],
-            knots: number[];
-        const scale = -3;
+    ): CubicHermiteSpline<THREE.Vector3> {
+        let points: THREE.Vector3[], dpoints: THREE.Vector3[], knots: number[];
         if (prev_event === undefined && next_event === undefined) {
             points = [this.get_default_rest_position()];
             dpoints = [new THREE.Vector3(0, 0, 0)];
-            apoints = [new THREE.Vector3(0, 0, 0)];
             knots = [0];
         } else if (prev_event === undefined) {
             points = [
@@ -113,7 +113,6 @@ class Hand {
                 new THREE.Vector3(0, 0, 0),
                 this.world_to_local_velocity(next_event!.get_ball_velocity())
             ];
-            apoints = [new THREE.Vector3(0, 0, 0), V3SCA(scale, dpoints[1])];
             knots = [next_event!.time - next_event!.unit_time, next_event!.time];
         } else if (next_event === undefined) {
             points = [
@@ -124,22 +123,30 @@ class Hand {
                 this.world_to_local_velocity(prev_event.get_ball_velocity()),
                 new THREE.Vector3(0, 0, 0)
             ];
-            apoints = [V3SCA(scale, dpoints[0]), new THREE.Vector3(0, 0, 0)];
             knots = [prev_event.time, prev_event.time + prev_event.unit_time];
+        } else if (prev_event.hand_status === "THROW") {
+            points = [
+                this.get_site_position(prev_event.unit_time, prev_event.is_thrown),
+                this.get_site_position(next_event.unit_time, next_event.is_thrown)
+            ];
+            dpoints = [
+                V3SCA(1, this.world_to_local_velocity(prev_event.get_ball_velocity())),
+                V3SCA(1 / 3, this.world_to_local_velocity(next_event.get_ball_velocity()))
+            ];
+            knots = [prev_event.time, next_event.time];
         } else {
             points = [
                 this.get_site_position(prev_event.unit_time, prev_event.is_thrown),
                 this.get_site_position(next_event.unit_time, next_event.is_thrown)
             ];
             dpoints = [
-                this.world_to_local_velocity(prev_event.get_ball_velocity()),
-                this.world_to_local_velocity(next_event.get_ball_velocity())
+                V3SCA(1 / 3, this.world_to_local_velocity(prev_event.get_ball_velocity())),
+                V3SCA(1, this.world_to_local_velocity(next_event.get_ball_velocity()))
             ];
-            apoints = [V3SCA(scale, dpoints[0]), V3SCA(scale, dpoints[1])];
             knots = [prev_event.time, next_event.time];
         }
         // TODO : Add a little bit of impact based on speed after throw / catch. Ou quand la ball sonne et qu'on la claque dans la main.
-        return new QuinticHermiteSpline(VECTOR3_STRUCTURE, points, dpoints, apoints, knots);
+        return new CubicHermiteSpline(VECTOR3_STRUCTURE, points, dpoints, knots);
     }
 
     get_local_position(time: number): THREE.Vector3 {

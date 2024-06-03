@@ -190,7 +190,7 @@ class CubicHermiteSpline<T> extends Spline<T> {
     }
 }
 
-class QuniticHermiteSpline<T> extends Spline<T> {
+class QuinticHermiteSpline<T> extends Spline<T> {
     points: T[];
     dpoints: T[];
     apoints: T[];
@@ -245,7 +245,7 @@ class QuniticHermiteSpline<T> extends Spline<T> {
     }
 
     get_transformation_matrix(): Matrix<number, number> {
-        return QuniticHermiteSpline._transformation_matrix;
+        return QuinticHermiteSpline._transformation_matrix;
     }
 
     get_param_matrix(prev_idx: number, next_idx: number, dt: number) {
@@ -261,4 +261,4 @@ class QuniticHermiteSpline<T> extends Spline<T> {
     }
 }
 
-export { CubicHermiteSpline, QuniticHermiteSpline };
+export { CubicHermiteSpline, QuinticHermiteSpline };
