@@ -37,6 +37,7 @@ const ball2 = simulator.balls[2];
 
 simulator.balls.forEach((ball) => {
     scene.add(ball.mesh);
+    ball.mesh.visible = false;
 });
 
 function lance(
@@ -56,30 +57,29 @@ function lance(
     target.timeline = target.timeline.insert(ev2.time, ev2);
 }
 
-lance(ball0, 1, 1, vincent.right_hand, nicolas.left_hand, 0.5);
-const spline = vincent.right_hand.get_spline(
-    vincent.right_hand.timeline.lt(0.9).value,
-    vincent.right_hand.timeline.gt(0.9).value
-);
-const curve = new SplineThree(spline);
-const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.01, 8, false);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const tubeMesh = new THREE.Mesh(tubeGeometry, material);
-scene.add(tubeMesh);
+// lance(ball0, 1, 1, vincent.right_hand, nicolas.left_hand, 0.5);
+// const spline = vincent.right_hand.get_spline(
+//     vincent.right_hand.timeline.lt(0.9).value,
+//     vincent.right_hand.timeline.gt(0.9).value
+// );
+// const curve = new SplineThree(spline);
+// const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.01, 8, false);
+// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+// const tubeMesh = new THREE.Mesh(tubeGeometry, material);
+// scene.add(tubeMesh);
 
-// const u = 0.25;
-// const d = u / 2;
-// lance(ball0);
-// for (let i = 0; i < 100; i++) {
-//     lance(
-//         simulator.balls[i % 3],
-//         1 + i * u,
-//         3 * u - d,
-//         vincent.hands[i % 2],
-//         vincent.hands[(i + 1) % 2],
-//         u
-//     );
-// }
+const u = 0.25;
+const d = u / 2;
+for (let i = 0; i < 100; i++) {
+    lance(
+        simulator.balls[i % 3],
+        1 + i * u,
+        3 * u - d,
+        vincent.hands[i % 2],
+        vincent.hands[(i + 1) % 2],
+        u
+    );
+}
 
 // lance(ball1, 1 + 1*u, 3 * u - d, left_hand, right_hand, u);
 // lance(ball2, 1 + 2*u, 3 * u - d, right_hand, left_hand, u);
