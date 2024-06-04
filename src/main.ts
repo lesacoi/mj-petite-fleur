@@ -27,6 +27,103 @@ const camera = simulator.camera;
 // const elbow_mesh = new THREE.Mesh(elbow_geometry, elbow_material);
 
 
+
+{
+    //Chest
+    let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
+        0.6 * Math.SQRT1_2,
+        0.4 * Math.SQRT1_2,
+        1,
+        4,
+        1
+    );
+    chest_geometry.rotateY(Math.PI / 4);
+    chest_geometry = chest_geometry.toNonIndexed();
+    chest_geometry.computeVertexNormals();
+    chest_geometry.scale(0.5, 1, 1);
+    const chest_material = new THREE.MeshPhongMaterial({ color: "green" });
+    const chest = new THREE.Mesh(chest_geometry, chest_material);
+    chest.position.set(0, 1.7, 0);
+    scene.add(chest);
+
+    //Head
+    const head_geometry = new THREE.SphereGeometry(0.2);
+    head_geometry.scale(0.8, 1, 0.8);
+    const head = new THREE.Mesh(head_geometry, chest_material);
+    head.position.set(0, 0.75, 0);
+    chest.add(head);
+
+    //Shoulders
+    const shoulder_material = new THREE.MeshPhongMaterial({ color: "red" });
+    const shoulder_geometry = new THREE.SphereGeometry(0.08);
+    const right_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
+    right_shoulder.position.set(0, 0.5, 0.3);
+    //right_shoulder.material.visible = false;
+    right_shoulder.rotateZ(-Math.PI / 2);
+    right_shoulder.rotateY(-0.2);
+    chest.add(right_shoulder);
+    const left_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
+    left_shoulder.position.set(0, 0.5, -0.3);
+    left_shoulder.rotateZ(-Math.PI / 2);
+    left_shoulder.rotateY(0.2);
+    chest.add(left_shoulder);
+
+    //Arms
+    const arm_length = 0.55;
+    const arm_material = new THREE.MeshPhongMaterial({ color: "white" });
+    const arm_geometry = new THREE.BoxGeometry(arm_length, 0.05, 0.05);
+    // const arm_geometry = new THREE.CylinderGeometry(0.03, 0.03, arm_length);
+    // arm_geometry.rotateZ(Math.PI / 2);
+    const right_arm = new THREE.Mesh(arm_geometry, arm_material);
+    right_arm.position.set(arm_length / 2, 0, 0);
+    right_shoulder.add(right_arm);
+    const left_arm = new THREE.Mesh(arm_geometry, arm_material);
+    left_arm.position.set(arm_length / 2, 0, 0);
+    left_shoulder.add(left_arm);
+
+    //Elbows
+    const elbow_geometry = new THREE.SphereGeometry(0.05);
+    const right_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
+    right_elbow.position.set(arm_length / 2, 0, 0);
+    right_elbow.rotateZ(Math.PI / 2);
+    right_arm.add(right_elbow);
+    const left_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
+    left_elbow.position.set(arm_length / 2, 0, 0);
+    left_elbow.rotateZ(Math.PI / 2);
+    left_arm.add(left_elbow);
+
+    //Forearms
+    const right_forearm = new THREE.Mesh(arm_geometry, arm_material);
+    right_forearm.position.set(arm_length / 2, 0, 0);
+    right_elbow.add(right_forearm);
+    const left_forearm = new THREE.Mesh(arm_geometry, arm_material);
+    left_forearm.position.set(arm_length / 2, 0, 0);
+    left_elbow.add(left_forearm);
+
+    //Hands
+    const hand_geometry = new THREE.SphereGeometry(0.05);
+    hand_geometry.scale(1, 0.8, 0.8);
+    const hand_material = new THREE.MeshPhongMaterial({ color: "black" });
+    const right_hand = new THREE.Mesh(hand_geometry, hand_material);
+    right_hand.position.set(arm_length / 2, 0, 0);
+    right_forearm.add(right_hand);
+    const left_hand = new THREE.Mesh(hand_geometry, hand_material);
+    left_hand.position.set(arm_length / 2, 0, 0);
+    left_forearm.add(left_hand);
+
+    //Legs
+    const leg_geometry = new THREE.BoxGeometry(0.15, 1.2, 0.1);
+    const right_leg = new THREE.Mesh(leg_geometry, chest_material);
+    right_leg.position.set(0, -1.1, 0.15);
+    chest.add(right_leg);
+    const left_leg = new THREE.Mesh(leg_geometry, chest_material);
+    left_leg.position.set(0, -1.1, -0.15);
+    chest.add(left_leg);
+
+    //Feet
+    //???
+}
+
 simulator.jugglers = [new Juggler(2.0)];
 const vincent = simulator.jugglers[0];
 //const nicolas = simulator.jugglers[1];
