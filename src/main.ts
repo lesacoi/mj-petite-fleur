@@ -9,12 +9,77 @@ import { SplineThree } from "./utils";
 import { Hand } from "./Hand";
 import { CubicHermiteSpline } from "./Spline";
 import { VECTOR3_STRUCTURE } from "./constants";
-import { BlurShaderUtils } from "three/examples/jsm/Addons.js";
+import { Howl, Howler } from "howler";
 
 const simulator = new Simulator("#simulator_canvas");
 const scene = simulator.scene;
 const renderer = simulator.renderer;
 const camera = simulator.camera;
+
+function loadAudio(src: string): Promise<Howl> {
+    return new Promise((resolve, reject) => {
+        const sound = new Howl({
+            src: src,
+            html5: true,
+            loop: true,
+            onload: () => {
+                console.log("Audio loaded");
+                resolve(sound);
+            },
+            onloaderror: (_, error) => {
+                reject(new Error(`Failed to load audio ${error}`));
+            },
+            onstop: () => {
+                console.log("Stopped");
+            },
+            onend: () => {
+                console.log("Ended");
+                sound.pause();
+                console.log(sound.playing());
+            },
+            onseek: () => {
+                if (!sound.playing()) {
+                    sound.play();
+                }
+                console.log(sound.playing());
+            }
+        });
+    });
+}
+function loadAudio2(src: string): Howl {
+    const sound = new Howl({
+        src: src,
+        html5: true,
+        loop: true,
+        onload: () => {
+            console.log("Audio loaded");
+        },
+        onstop: () => {
+            console.log("Stopped");
+        },
+        onend: () => {
+            console.log("Ended");
+            sound.pause();
+            console.log(sound.playing());
+        },
+        onseek: () => {
+            if (!sound.playing()) {
+                sound.play();
+            }
+            console.log(sound.playing());
+        }
+    });
+    return sound;
+}
+
+// const music = await loadAudio("petite_fleur_vincent.mp3");
+// for (let i = 0; i < 2; i++) {
+//     music.play();
+// }
+const music = loadAudio2("petite_fleur_vincent.mp3");
+for (let i = 0; i < 2; i++) {
+    music.play();
+}
 
 // const arm_length = 1;
 // const forearm_length = 1;
@@ -25,8 +90,6 @@ const camera = simulator.camera;
 // const arm_mesh = new THREE.Mesh(arm_geometry, arm_material);
 // const forearm_mesh = new THREE.Mesh(arm_geometry, arm_material);
 // const elbow_mesh = new THREE.Mesh(elbow_geometry, elbow_material);
-
-
 
 {
     //Chest
@@ -249,15 +312,21 @@ const fpsGraph = pane.addBlade({
     label: "FPS",
     rows: 2
 }) as EssentialsPlugin.FpsGraphBladeApi;
-const monitor = { time: 0 };
-pane.addBinding(monitor, "time", {
+const monitor = { video_time: 0, audio_time: 0, audio_control: 0 };
+pane.addBinding(monitor, "video_time", {
     readonly: true
 });
+pane.addBinding(monitor, "audio_time", {
+    readonly: true
+});
+const blade = pane.addBinding(monitor, "audio_time", { min: 0, max: music.duration(), step: 0.1 });
+blade.on("change", (ev) => music.seek(ev.value));
 
 function render(t: number) {
     fpsGraph.begin();
     const time = t * 0.001; // convert time to seconds
-    monitor.time = time;
+    monitor.video_time = time;
+    monitor.audio_time = music.seek();
     resizeRendererToDisplaySize(renderer, camera);
 
     simulator.balls.forEach((ball) => {
