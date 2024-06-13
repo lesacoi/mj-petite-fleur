@@ -9,77 +9,75 @@ import { SplineThree } from "./utils";
 import { Hand } from "./Hand";
 import { CubicHermiteSpline } from "./Spline";
 import { VECTOR3_STRUCTURE } from "./constants";
-import { Howl, Howler } from "howler";
+import * as Tone from "tone";
+
+//TODO : Add button press to enable clean audio start.
+// console.log(Tone.getContext().state);
+
+const transport = Tone.getTransport();
+
+const sfx = new Tone.Players({
+    urls: {
+        heavy_hit1: "grelot_balls_sfx/heavy_hit1.mp3",
+        heavy_hit2: "grelot_balls_sfx/heavy_hit2.mp3",
+        heavy_hit3: "grelot_balls_sfx/heavy_hit3.mp3",
+        normal_hit1: "grelot_balls_sfx/normal_hit1.mp3",
+        normal_hit2: "grelot_balls_sfx/normal_hit2.mp3",
+        weak_hit1: "grelot_balls_sfx/weak_hit1.mp3",
+        weak_hit2: "grelot_balls_sfx/weak_hit2.mp3",
+        shaker: "grelot_balls_sfx/shaker.mp3",
+        weak_hit_shaker: "grelot_balls_sfx/weak_hit_shaker.mp3"
+    }
+});
+const sfx_gain = new Tone.Gain().toDestination();
+sfx.connect(sfx_gain);
+// //Playing sounds test
+// await Tone.loaded().then(() => {
+//     sfx.player("heavy_hit1").start("+0");
+//     sfx.player("heavy_hit2").start("+1");
+//     sfx.player("heavy_hit3").start("+2");
+//     sfx.player("normal_hit1").start("+3");
+//     sfx.player("normal_hit2").start("+4");
+//     sfx.player("weak_hit1").start("+5");
+//     sfx.player("weak_hit2").start("+6");
+//     sfx.player("shaker").start("+7");
+//     sfx.player("weak_hit_shaker").start("+8");
+// });
+
+const music = new Tone.Player("petite_fleur_vincent.mp3").toDestination();
+const music_gain = new Tone.Gain().toDestination();
+music.connect(music_gain);
+music.sync().start(0);
+
+await Tone.loaded().then(() => {
+    transport.start();
+});
+
+let debug_pause_audio = false;
+let prev_debug_pause_audio = false;
+
+// Tone.getTransport().scheduleRepeat((time) => {
+//     console.log(`Check if pause audio ${time}`);
+//     const tmp_debug_pause_audio = debug_pause_audio;
+//     if (debug_pause_audio && !prev_debug_pause_audio) {
+//         music.
+//     } else if (!debug_pause_audio && prev_debug_pause_audio) {
+//         Tone.getTransport().start();
+//     }
+//     debug_pause_audio = true; //Should be set to false in the script.
+//     prev_debug_pause_audio = tmp_debug_pause_audio;
+// }, "1");
+//Tone.getTransport().start();
+
+// setInterval(() => {
+//     console.log(`I am not paused at ${Tone.now()}`);
+//     debug_pause_audio = false;
+// }, 500);
 
 const simulator = new Simulator("#simulator_canvas");
 const scene = simulator.scene;
 const renderer = simulator.renderer;
 const camera = simulator.camera;
-
-function loadAudio(src: string): Promise<Howl> {
-    return new Promise((resolve, reject) => {
-        const sound = new Howl({
-            src: src,
-            html5: true,
-            loop: true,
-            onload: () => {
-                console.log("Audio loaded");
-                resolve(sound);
-            },
-            onloaderror: (_, error) => {
-                reject(new Error(`Failed to load audio ${error}`));
-            },
-            onstop: () => {
-                console.log("Stopped");
-            },
-            onend: () => {
-                console.log("Ended");
-                sound.pause();
-                console.log(sound.playing());
-            },
-            onseek: () => {
-                if (!sound.playing()) {
-                    sound.play();
-                }
-                console.log(sound.playing());
-            }
-        });
-    });
-}
-function loadAudio2(src: string): Howl {
-    const sound = new Howl({
-        src: src,
-        html5: true,
-        loop: true,
-        onload: () => {
-            console.log("Audio loaded");
-        },
-        onstop: () => {
-            console.log("Stopped");
-        },
-        onend: () => {
-            console.log("Ended");
-            sound.pause();
-            console.log(sound.playing());
-        },
-        onseek: () => {
-            if (!sound.playing()) {
-                sound.play();
-            }
-            console.log(sound.playing());
-        }
-    });
-    return sound;
-}
-
-// const music = await loadAudio("petite_fleur_vincent.mp3");
-// for (let i = 0; i < 2; i++) {
-//     music.play();
-// }
-const music = loadAudio2("petite_fleur_vincent.mp3");
-for (let i = 0; i < 2; i++) {
-    music.play();
-}
 
 // const arm_length = 1;
 // const forearm_length = 1;
@@ -312,28 +310,49 @@ const fpsGraph = pane.addBlade({
     label: "FPS",
     rows: 2
 }) as EssentialsPlugin.FpsGraphBladeApi;
-const monitor = { video_time: 0, audio_time: 0, audio_control: 0 };
+const monitor = { video_time: 0, audio_time: 0, audio_control: 0, transport_play: true };
 pane.addBinding(monitor, "video_time", {
     readonly: true
 });
 pane.addBinding(monitor, "audio_time", {
     readonly: true
 });
-const blade = pane.addBinding(monitor, "audio_time", { min: 0, max: music.duration(), step: 0.1 });
-blade.on("change", (ev) => music.seek(ev.value));
+const blade = pane.addBinding(monitor, "audio_time", {
+    min: 0,
+    max: music.buffer.duration,
+    step: 0.1
+});
+blade.on("change", (ev) => {
+    // console.log(`Value : ${ev.value} Last : ${ev.last}`);
+    if (ev.last) {
+        transport.seconds = ev.value;
+    }
+});
+const play_blade = pane.addBinding(monitor, "transport_play");
+play_blade.on("change", (ev) => {
+    if (!ev.value) {
+        transport.pause();
+    } else {
+        transport.start();
+    }
+});
 
 function render(t: number) {
     fpsGraph.begin();
     const time = t * 0.001; // convert time to seconds
+    const audio_time = transport.seconds;
     monitor.video_time = time;
-    monitor.audio_time = music.seek();
+    monitor.audio_time = audio_time;
+    // console.log(`Without look ahead : ${transport.immediate()}`);
+    // console.log(`With look ahead : ${transport.now()}`);
+    // console.log(`Look ahead : ${transport.context.lookAhead}`);
     resizeRendererToDisplaySize(renderer, camera);
 
     simulator.balls.forEach((ball) => {
-        ball.render(time);
+        ball.render(audio_time);
     });
     simulator.jugglers.forEach((juggler) => {
-        juggler.render(time);
+        juggler.render(audio_time);
     });
 
     renderer.render(scene, camera);
@@ -346,312 +365,3 @@ simulator.balls = simulator.balls.filter((ball) => {
     return ball.timeline.length !== 0;
 });
 requestAnimationFrame(render);
-// height = height;
-// const basic_geometry = new THREE.BoxGeometry(width, height, depth, 1, 1, 1);
-// //this.geometry = new THREE.EdgesGeometry(basic_geometry);
-// //this.material = new THREE.LineBasicMaterial({ color: "black", linewidth: 2 });
-// const geometry2 = basic_geometry;
-// const material = new THREE.MeshPhongMaterial({ color: "black" });
-// const mesh = new THREE.Mesh();
-// // const hand_physics_handling: HandPhysicsHandling = {
-// //     min_dist: 0.05,
-// //     max_dist: width,
-// //     up_vector: new THREE.Vector3(0, 1, 0),
-// //     right_vector: new THREE.Vector3(1, 0, 0)
-// // };
-// // this.hands = [new Hand(hand_physics_handling, true), new Hand(hand_physics_handling, false)];
-
-// // this.juggling_origin = new THREE.Object3D();
-// // this.juggling_origin.position.set(arm_length, 0, 0);
-
-// // this.mesh.add(this.juggling_origin);
-// // this.juggling_origin.add(this.hands[0].mesh);
-// // this.juggling_origin.add(this.hands[1].mesh);
-
-// const boxWidth = 1;
-// const boxHeight = 1;
-// const boxDepth = 1;
-// const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-
-// function makeInstance(geometry, color, x) {
-//     const material = new THREE.MeshPhongMaterial({ color });
-
-//     const cube = new THREE.Mesh(geometry, material);
-//     scene.add(cube);
-
-//     cube.position.x = x;
-
-//     return cube;
-// }
-
-// const cubes = [
-//     makeInstance(geometry, 0x44aa88, 0),
-//     makeInstance(geometry, 0x8844aa, -2),
-//     makeInstance(geometry, 0xaa8844, 2)
-// ];
-
-// console.log("done");
-// function render(time) {
-//     time *= 0.001;
-
-//     resizeRendererToDisplaySize(renderer, camera);
-
-//     cubes.forEach((cube, ndx) => {
-//         const speed = 1 + ndx * 0.1;
-//         const rot = time * speed;
-//         cube.rotation.x = rot;
-//         cube.rotation.y = rot;
-//     });
-
-//     renderer.render(scene, camera);
-
-//     requestAnimationFrame(render);
-// }
-
-// requestAnimationFrame(render);
-// function create_timelines(siteswap: number[]) {
-//     let sum = 0;
-//     siteswap.forEach((element) => {
-//         sum += element;
-//     });
-//     const mean = sum / siteswap.length;
-//     if (!Number.isInteger(mean)) {
-//         throw new Error("Siteswap sequence is not valid")
-//     }
-// }
-
-/*
-function create_hand_events(
-    pattern: string,
-    dwell_time: number,
-    siteswap_unit_time: number,
-    nb_hands: number,
-    balls_init_config:
-): RBTree<number, EventData>[] {
-    const hand_events: RBTree<number, EventData>[] = [];
-    }
-}*/
-
-// import {
-//     Bone,
-//     Color,
-//     CylinderGeometry,
-//     DoubleSide,
-//     Float32BufferAttribute,
-//     MeshPhongMaterial,
-//     PerspectiveCamera,
-//     Scene,
-//     SkinnedMesh,
-//     Skeleton,
-//     SkeletonHelper,
-//     Vector3,
-//     Uint16BufferAttribute,
-//     WebGLRenderer
-// } from "three";
-// import { CCDIKSolver, CCDIKHelper } from "three/addons/animation/CCDIKSolver.js";
-
-// import { GUI } from "three/addons/libs/lil-gui.module.min.js";
-// import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
-// let gui, scene, camera, renderer, orbit, mesh, bones, skeletonHelper, ikSolver;
-
-// const state = {
-//     ikSolverAutoUpdate: true
-// };
-
-// function initScene() {
-//     const canvas = document.querySelector("#simulator_canvas");
-
-//     gui = new GUI();
-
-//     scene = new Scene();
-//     scene.background = new Color(0x444444);
-
-//     camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
-//     camera.position.z = 30;
-//     camera.position.y = 30;
-
-//     renderer = new WebGLRenderer({ antialias: true, canvas });
-//     renderer.setPixelRatio(window.devicePixelRatio);
-//     renderer.setSize(window.innerWidth, window.innerHeight);
-//     document.body.appendChild(renderer.domElement);
-
-//     orbit = new OrbitControls(camera, renderer.domElement);
-//     orbit.enableZoom = false;
-
-//     window.addEventListener(
-//         "resize",
-//         function () {
-//             camera.aspect = window.innerWidth / window.innerHeight;
-//             camera.updateProjectionMatrix();
-
-//             renderer.setSize(window.innerWidth, window.innerHeight);
-//         },
-//         false
-//     );
-
-//     initBones();
-//     setupDatGui();
-// }
-
-// function createGeometry(sizing) {
-//     const geometry = new CylinderGeometry(
-//         5, // radiusTop
-//         5, // radiusBottom
-//         sizing.height, // height
-//         8, // radiusSegments
-//         sizing.segmentCount * 1, // heightSegments
-//         true // openEnded
-//     );
-
-//     const position = geometry.attributes.position;
-
-//     const vertex = new Vector3();
-
-//     const skinIndices = [];
-//     const skinWeights = [];
-
-//     for (let i = 0; i < position.count; i++) {
-//         vertex.fromBufferAttribute(position, i);
-
-//         const y = vertex.y + sizing.halfHeight;
-
-//         const skinIndex = Math.floor(y / sizing.segmentHeight);
-//         const skinWeight = (y % sizing.segmentHeight) / sizing.segmentHeight;
-
-//         skinIndices.push(skinIndex, skinIndex + 1, 0, 0);
-//         skinWeights.push(1 - skinWeight, skinWeight, 0, 0);
-//     }
-
-//     // geometry.setAttribute("skinIndex", new Uint16BufferAttribute(skinIndices, 4));
-//     // geometry.setAttribute("skinWeight", new Float32BufferAttribute(skinWeights, 4));
-
-//     return geometry;
-// }
-
-// function createBones(sizing) {
-//     bones = [];
-
-//     // "root bone"
-//     const rootBone = new Bone();
-//     rootBone.name = "root";
-//     rootBone.position.y = -sizing.halfHeight;
-//     bones.push(rootBone);
-
-//     //
-//     // "bone0", "bone1", "bone2", "bone3"
-//     //
-
-//     // "bone0"
-//     let prevBone = new Bone();
-//     prevBone.position.y = 0;
-//     rootBone.add(prevBone);
-//     bones.push(prevBone);
-
-//     // "bone1", "bone2", "bone3"
-//     for (let i = 1; i <= sizing.segmentCount; i++) {
-//         const bone = new Bone();
-//         bone.position.y = sizing.segmentHeight;
-//         bones.push(bone);
-//         bone.name = `bone${i}`;
-//         prevBone.add(bone);
-//         prevBone = bone;
-//     }
-
-//     // "target"
-//     const targetBone = new Bone();
-//     targetBone.name = "target";
-//     targetBone.position.y = sizing.height + sizing.segmentHeight; // relative to parent: rootBone
-//     rootBone.add(targetBone);
-//     bones.push(targetBone);
-
-//     return bones;
-// }
-
-// function createMesh(geometry, bones) {
-//     const material = new MeshPhongMaterial({
-//         color: 0x156289,
-//         emissive: 0x072534,
-//         side: DoubleSide,
-//         flatShading: true,
-//         wireframe: true
-//     });
-
-//     const mesh = new SkinnedMesh(geometry, material);
-//     const skeleton = new Skeleton(bones);
-
-//     mesh.add(bones[0]);
-
-//     mesh.bind(skeleton);
-
-//     skeletonHelper = new SkeletonHelper(mesh);
-//     skeletonHelper.material.linewidth = 2;
-//     scene.add(skeletonHelper);
-
-//     return mesh;
-// }
-
-// function setupDatGui() {
-//     gui.add(mesh, "pose").name("mesh.pose()");
-
-//     mesh.skeleton.bones
-//         .filter((bone) => bone.name === "target")
-//         .forEach(function (bone) {
-//             const folder = gui.addFolder(bone.name);
-
-//             const delta = 20;
-//             folder.add(bone.position, "x", -delta + bone.position.x, delta + bone.position.x);
-//             folder.add(bone.position, "y", -bone.position.y, bone.position.y);
-//             folder.add(bone.position, "z", -delta + bone.position.z, delta + bone.position.z);
-//         });
-
-//     gui.add(ikSolver, "update").name("ikSolver.update()");
-//     gui.add(state, "ikSolverAutoUpdate");
-// }
-
-// function initBones() {
-//     const segmentHeight = 8;
-//     const segmentCount = 3;
-//     const height = segmentHeight * segmentCount;
-//     const halfHeight = height * 0.5;
-
-//     const sizing = {
-//         segmentHeight,
-//         segmentCount,
-//         height,
-//         halfHeight
-//     };
-
-//     const geometry = createGeometry(sizing);
-//     const bones = createBones(sizing);
-//     mesh = createMesh(geometry, bones);
-
-//     scene.add(mesh);
-
-//     //
-//     // ikSolver
-//     //
-
-//     const iks = [
-//         {
-//             target: 5,
-//             effector: 4,
-//             links: [{ index: 3 }, { index: 2 }, { index: 1 }]
-//         }
-//     ];
-//     ikSolver = new CCDIKSolver(mesh, iks);
-//     scene.add(new CCDIKHelper(mesh, iks));
-// }
-
-// function render() {
-//     requestAnimationFrame(render);
-
-//     if (state.ikSolverAutoUpdate) {
-//         ikSolver?.update();
-//     }
-
-//     renderer.render(scene, camera);
-// }
-
-// initScene();
-// render();
