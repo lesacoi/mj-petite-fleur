@@ -16,8 +16,8 @@ import * as Tone from "tone";
 //TODO : Using Tone.Player can't play two sounds at once.
 // console.log(Tone.getContext().state);
 
-const wait_screen = document.querySelector("#wait_screen")!;
-wait_screen.addEventListener("click");
+// const wait_screen = document.querySelector("#wait_screen")!;
+// wait_screen.addEventListener("click");
 
 const transport = Tone.getTransport();
 
