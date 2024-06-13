@@ -46,7 +46,8 @@ class Simulator {
         controls.target.set(0, 0, 0);
         controls.update();
 
-        scene.background = new THREE.Color(0x555555);
+        const background_color = window.getComputedStyle(canvas).backgroundColor;
+        scene.background = new THREE.Color(background_color);
 
         // Helpers
         const axes_helper = new THREE.AxesHelper(1.5);

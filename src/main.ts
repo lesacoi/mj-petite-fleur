@@ -12,7 +12,12 @@ import { VECTOR3_STRUCTURE } from "./constants";
 import * as Tone from "tone";
 
 //TODO : Add button press to enable clean audio start.
+//TODO : Test positional audio (too ressource expensive ?)
+//TODO : Using Tone.Player can't play two sounds at once.
 // console.log(Tone.getContext().state);
+
+const wait_screen = document.querySelector("#wait_screen")!;
+wait_screen.addEventListener("click");
 
 const transport = Tone.getTransport();
 
@@ -29,50 +34,31 @@ const sfx = new Tone.Players({
         weak_hit_shaker: "grelot_balls_sfx/weak_hit_shaker.mp3"
     }
 });
-const sfx_gain = new Tone.Gain().toDestination();
+const sfx_gain = new Tone.Volume().toDestination();
 sfx.connect(sfx_gain);
-// //Playing sounds test
-// await Tone.loaded().then(() => {
-//     sfx.player("heavy_hit1").start("+0");
-//     sfx.player("heavy_hit2").start("+1");
-//     sfx.player("heavy_hit3").start("+2");
-//     sfx.player("normal_hit1").start("+3");
-//     sfx.player("normal_hit2").start("+4");
-//     sfx.player("weak_hit1").start("+5");
-//     sfx.player("weak_hit2").start("+6");
-//     sfx.player("shaker").start("+7");
-//     sfx.player("weak_hit_shaker").start("+8");
-// });
+//Playing sounds test
+//await Tone.loaded().then(() => {
+//sfx.player("heavy_hit1").start("+0");
+//sfx.player("heavy_hit2").start("+1");
+//sfx.player("heavy_hit3").start("+2");
+// sfx.player("normal_hit1").start("+3");
+// sfx.player("normal_hit2").start("+4");
+// sfx.player("weak_hit1").start("+5");
+// sfx.player("weak_hit2").start("+6");
+// sfx.player("shaker").start("+7");
+// sfx.player("weak_hit_shaker").start("+8");
+//});
 
 const music = new Tone.Player("petite_fleur_vincent.mp3").toDestination();
 const music_gain = new Tone.Gain().toDestination();
 music.connect(music_gain);
 music.sync().start(0);
 
-await Tone.loaded().then(() => {
-    transport.start();
-});
-
-let debug_pause_audio = false;
-let prev_debug_pause_audio = false;
-
-// Tone.getTransport().scheduleRepeat((time) => {
-//     console.log(`Check if pause audio ${time}`);
-//     const tmp_debug_pause_audio = debug_pause_audio;
-//     if (debug_pause_audio && !prev_debug_pause_audio) {
-//         music.
-//     } else if (!debug_pause_audio && prev_debug_pause_audio) {
-//         Tone.getTransport().start();
+// await Tone.loaded().then(() => {
+//     if (Tone.getContext().state === "running") {
+//         //transport.start();
 //     }
-//     debug_pause_audio = true; //Should be set to false in the script.
-//     prev_debug_pause_audio = tmp_debug_pause_audio;
-// }, "1");
-//Tone.getTransport().start();
-
-// setInterval(() => {
-//     console.log(`I am not paused at ${Tone.now()}`);
-//     debug_pause_audio = false;
-// }, 500);
+// });
 
 const simulator = new Simulator("#simulator_canvas");
 const scene = simulator.scene;
@@ -302,15 +288,23 @@ for (let i = 0; i < 100; i++) {
 // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 // const tubeMesh = new THREE.Mesh(tubeGeometry, material);
 // scene.add(tubeMesh);
-
-const pane = new TWEAKPANE.Pane();
+const tweakpane_container = document.querySelector(".tp-dfwv");
+if (!(tweakpane_container instanceof HTMLElement)) {
+    throw new Error();
+}
+const pane = new TWEAKPANE.Pane({ container: tweakpane_container });
 pane.registerPlugin(EssentialsPlugin);
 const fpsGraph = pane.addBlade({
     view: "fpsgraph",
     label: "FPS",
     rows: 2
 }) as EssentialsPlugin.FpsGraphBladeApi;
-const monitor = { video_time: 0, audio_time: 0, audio_control: 0, transport_play: true };
+const monitor = {
+    video_time: 0,
+    audio_time: 0,
+    audio_control: 0,
+    transport_play: transport.state === "started"
+};
 pane.addBinding(monitor, "video_time", {
     readonly: true
 });
@@ -328,8 +322,13 @@ blade.on("change", (ev) => {
         transport.seconds = ev.value;
     }
 });
-const play_blade = pane.addBinding(monitor, "transport_play");
+const play_blade = pane.addBinding(monitor, "transport_play", { label: "Play" });
 play_blade.on("change", (ev) => {
+    if (Tone.getContext().state === "suspended") {
+        async () => {
+            await Tone.start();
+        };
+    }
     if (!ev.value) {
         transport.pause();
     } else {
