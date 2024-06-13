@@ -14,12 +14,40 @@ import * as Tone from "tone";
 //TODO : Add button press to enable clean audio start.
 //TODO : Test positional audio (too ressource expensive ?)
 //TODO : Using Tone.Player can't play two sounds at once.
+//TODO : With react, handle volume button being pressed as interaction ?
+//TODO : Test on phone if touch correctly starts audio
 // console.log(Tone.getContext().state);
 
 // const wait_screen = document.querySelector("#wait_screen")!;
 // wait_screen.addEventListener("click");
 
 const transport = Tone.getTransport();
+
+const first_interaction_event_types = ["mousedown", "keydown", "touchstart"];
+
+async function handle_first_interaction(event: Event) {
+    for (const event_type of first_interaction_event_types) {
+        event.currentTarget?.removeEventListener(event_type, handle_first_interaction, true);
+    }
+    await Tone.start()
+        .then(() => {
+            console.log("Ready to play audio");
+            return Tone.loaded();
+        })
+        .then(() => {
+            console.log("Audio buffers all loaded !");
+            transport.start();
+        })
+        .catch((reason: unknown) => {
+            console.log(reason);
+        });
+}
+
+for (const event_type of first_interaction_event_types) {
+    document.body.addEventListener(event_type, handle_first_interaction, { capture: true });
+}
+
+
 
 const sfx = new Tone.Players({
     urls: {
@@ -53,6 +81,9 @@ const music = new Tone.Player("petite_fleur_vincent.mp3").toDestination();
 const music_gain = new Tone.Gain().toDestination();
 music.connect(music_gain);
 music.sync().start(0);
+
+// await Tone.loaded();    
+// transport.start();
 
 // await Tone.loaded().then(() => {
 //     if (Tone.getContext().state === "running") {
