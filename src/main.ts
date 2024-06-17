@@ -23,31 +23,74 @@ import * as Tone from "tone";
 
 const transport = Tone.getTransport();
 
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Handling of the first user input before playing audio.
 const first_interaction_event_types = ["mousedown", "keydown", "touchstart"];
 
-async function handle_first_interaction(event: Event) {
-    for (const event_type of first_interaction_event_types) {
-        event.currentTarget?.removeEventListener(event_type, handle_first_interaction, true);
-    }
-    await Tone.start()
-        .then(() => {
-            console.log("Ready to play audio");
-            return Tone.loaded();
-        })
-        .then(() => {
-            console.log("Audio buffers all loaded !");
-            transport.start();
-        })
-        .catch((reason: unknown) => {
-            console.log(reason);
-        });
+function run_async_function_until_complete<F extends (...args: Parameters<F>) => ReturnType<F>>(
+    f: F,
+    ...args: Parameters<F>
+): ReturnType<F> {
+    return f(...args);
 }
+
+const result1 = test(add, 2, 3); // result1 will be 5
+console.log(result1); // Output: 5
+
+function asyncOperation() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            console.log("Async operation complete");
+            resolve("Result");
+        }, 2000);
+    });
+}
+
+// function runBlockingCallback(callback) {
+//     return (async () => {
+//         try {
+//             const result = await asyncOperation();
+//             callback(result);
+//         } catch (error) {
+//             console.error("Error in async operation:", error);
+//         }
+//     })();
+// }
+
+// console.log("Start");
+// runBlockingCallback((result) => {
+//     console.log("Result:", result);
+//     console.log("End");
+// });
+
+// function handle_first_interaction(event: Event) {
+//     for (const event_type of first_interaction_event_types) {
+//         // eslint-disable-next-line @typescript-eslint/no-misused-promises
+//         event.currentTarget?.removeEventListener(event_type, handle_first_interaction, true);
+//     }
+//     //We block the promise until resolved
+//     await Tone.start()
+//         .then(() => {
+//             console.log("User interaction detected. Ready to play audio");
+//             return Tone.loaded();
+//         })
+//         .then(() => {
+//             console.log("Audio buffers all loaded !");
+//             //transport.start();
+//         })
+//         .catch((reason: unknown) => {
+//             throw new Error(`Unable to setup the audio to play. Reason : ${reason}`);
+//             //console.log(reason);
+//         });
+// }
 
 for (const event_type of first_interaction_event_types) {
-    document.body.addEventListener(event_type, handle_first_interaction, { capture: true });
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    document.body.addEventListener(event_type, handle_first_interaction, true);
 }
-
-
 
 const sfx = new Tone.Players({
     urls: {
@@ -82,7 +125,7 @@ const music_gain = new Tone.Gain().toDestination();
 music.connect(music_gain);
 music.sync().start(0);
 
-// await Tone.loaded();    
+// await Tone.loaded();
 // transport.start();
 
 // await Tone.loaded().then(() => {
@@ -354,15 +397,15 @@ blade.on("change", (ev) => {
     }
 });
 const play_blade = pane.addBinding(monitor, "transport_play", { label: "Play" });
-play_blade.on("change", (ev) => {
-    if (Tone.getContext().state === "suspended") {
-        async () => {
-            await Tone.start();
-        };
-    }
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+play_blade.on("change", async (ev) => {
     if (!ev.value) {
         transport.pause();
     } else {
+        if (Tone.getContext().state === "suspended") {
+            await Tone.start();
+        }
+        await Tone.loaded();
         transport.start();
     }
 });
