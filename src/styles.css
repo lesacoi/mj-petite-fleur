@@ -10,14 +10,14 @@ body,
     width: 100%;
     height: 100%;
     display: block;
-    background-color: #430202; /*#555555*/
+    background-color: #555555; /*#430202*/
 }
 
 #wait_screen {
-    width: 100%;
-    height: 100%;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     position: absolute;
     backdrop-filter: blur(5px);
     display: flex;
@@ -25,11 +25,32 @@ body,
     align-items: center;
 }
 
-#wait_screen p {
-    color:white;
+#wait_screen div {
+    flex-direction: column;
     background-color: black;
+    border-radius: 5px;
+}
+
+#wait_screen p {
+    color: white;
     padding: 0.5rem;
     margin: 0px;
-    border-radius: 5px;
     user-select: none;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.fade_out {
+    animation: fadeOut 0.5s forwards;
+}
+
+.fade_in {
+    animation: fadeOut 0.5s backwards;
 }

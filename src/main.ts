@@ -11,85 +11,74 @@ import { CubicHermiteSpline } from "./Spline";
 import { VECTOR3_STRUCTURE } from "./constants";
 import * as Tone from "tone";
 
-//TODO : Add button press to enable clean audio start.
 //TODO : Test positional audio (too ressource expensive ?)
 //TODO : Using Tone.Player can't play two sounds at once.
 //TODO : With react, handle volume button being pressed as interaction ?
 //TODO : Test on phone if touch correctly starts audio
-// console.log(Tone.getContext().state);
-
-// const wait_screen = document.querySelector("#wait_screen")!;
-// wait_screen.addEventListener("click");
 
 const transport = Tone.getTransport();
 
-function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
+const handle_load_end = (function () {
+    let load_ready = 0;
+
+    return function () {
+        load_ready++;
+        if (load_ready === 2) {
+            const wait_screen = document.querySelector("#wait_screen");
+            if (!(wait_screen instanceof Element)) {
+                throw new Error();
+            }
+            wait_screen.classList.add("fade_out");
+            wait_screen.addEventListener("animationend", () => {
+                wait_screen.remove();
+            });
+        }
+    };
+})();
 
 // Handling of the first user input before playing audio.
 const first_interaction_event_types = ["mousedown", "keydown", "touchstart"];
-
-function run_async_function_until_complete<F extends (...args: Parameters<F>) => ReturnType<F>>(
-    f: F,
-    ...args: Parameters<F>
-): ReturnType<F> {
-    return f(...args);
+async function handle_first_interaction(event: Event) {
+    for (const event_type of first_interaction_event_types) {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        event.currentTarget?.removeEventListener(event_type, handle_first_interaction, true);
+    }
+    const text_element = document.querySelector("#wait_user");
+    if (!(text_element instanceof HTMLParagraphElement)) {
+        throw new Error();
+    }
+    text_element.textContent = "User interaction detected ✔️";
+    await Tone.start();
+    handle_load_end();
+    //We block the promise until resolved
+    // await Tone.start()
+    //     .then(() => {
+    //         console.log("User interaction detected. Ready to play audio");
+    //         return Tone.loaded();
+    //     })
+    //     .then(() => {
+    //         console.log("Audio buffers all loaded !");
+    //         //transport.start();
+    //     })
+    //     .catch((reason: unknown) => {
+    //         throw new Error(`Unable to setup the audio to play. Reason : ${reason}`);
+    //         //console.log(reason);
+    //     });
 }
-
-const result1 = test(add, 2, 3); // result1 will be 5
-console.log(result1); // Output: 5
-
-function asyncOperation() {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log("Async operation complete");
-            resolve("Result");
-        }, 2000);
-    });
-}
-
-// function runBlockingCallback(callback) {
-//     return (async () => {
-//         try {
-//             const result = await asyncOperation();
-//             callback(result);
-//         } catch (error) {
-//             console.error("Error in async operation:", error);
-//         }
-//     })();
-// }
-
-// console.log("Start");
-// runBlockingCallback((result) => {
-//     console.log("Result:", result);
-//     console.log("End");
-// });
-
-// function handle_first_interaction(event: Event) {
-//     for (const event_type of first_interaction_event_types) {
-//         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-//         event.currentTarget?.removeEventListener(event_type, handle_first_interaction, true);
-//     }
-//     //We block the promise until resolved
-//     await Tone.start()
-//         .then(() => {
-//             console.log("User interaction detected. Ready to play audio");
-//             return Tone.loaded();
-//         })
-//         .then(() => {
-//             console.log("Audio buffers all loaded !");
-//             //transport.start();
-//         })
-//         .catch((reason: unknown) => {
-//             throw new Error(`Unable to setup the audio to play. Reason : ${reason}`);
-//             //console.log(reason);
-//         });
-// }
 
 for (const event_type of first_interaction_event_types) {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     document.body.addEventListener(event_type, handle_first_interaction, true);
+}
+
+async function handle_sounds_loaded() {
+    await Tone.loaded();
+    const text_element = document.querySelector("#wait_load");
+    if (!(text_element instanceof HTMLParagraphElement)) {
+        throw new Error();
+    }
+    text_element.textContent = "Sound loaded ✔️";
+    handle_load_end();
 }
 
 const sfx = new Tone.Players({
@@ -105,6 +94,7 @@ const sfx = new Tone.Players({
         weak_hit_shaker: "grelot_balls_sfx/weak_hit_shaker.mp3"
     }
 });
+
 const sfx_gain = new Tone.Volume().toDestination();
 sfx.connect(sfx_gain);
 //Playing sounds test
@@ -124,7 +114,7 @@ const music = new Tone.Player("petite_fleur_vincent.mp3").toDestination();
 const music_gain = new Tone.Gain().toDestination();
 music.connect(music_gain);
 music.sync().start(0);
-
+await Tone.loaded();
 // await Tone.loaded();
 // transport.start();
 
@@ -133,6 +123,10 @@ music.sync().start(0);
 //         //transport.start();
 //     }
 // });
+
+handle_sounds_loaded().catch(() => {
+    throw new Error();
+});
 
 const simulator = new Simulator("#simulator_canvas");
 const scene = simulator.scene;
@@ -391,7 +385,7 @@ const blade = pane.addBinding(monitor, "audio_time", {
     step: 0.1
 });
 blade.on("change", (ev) => {
-    // console.log(`Value : ${ev.value} Last : ${ev.last}`);
+    console.log(`Value : ${ev.value} Last : ${ev.last}`);
     if (ev.last) {
         transport.seconds = ev.value;
     }
