@@ -14,6 +14,14 @@ import * as THREE from "three";
 class JugglingEvent {
     time: number;
     unit_time: number;
+    /**
+     * The sound the ball should make when caught.
+     * The type of sound_name is in conjunction with the one of Ball.sound.
+     * If Ball.sound is of type Tone.Players, then sound can be either a string
+     * specifying which sound to play, or an array of them to choose randomly front.
+     * If Ball.sound if of type Tone.Player | undefined, sound should be undefined.
+     */
+    sound_name: string[] | string | undefined;
     readonly ball_status: "AIRBORNE" | "HELD";
     readonly hand_status: "CATCH" | "THROW";
     private _ball_ref?: CWeakRef<Ball>;
@@ -25,7 +33,8 @@ class JugglingEvent {
         unit_time: number,
         status: "CATCH" | "THROW",
         hand?: Hand,
-        ball?: Ball
+        ball?: Ball,
+        sound_name?: string[] | string
     ) {
         this.time = time;
         this.unit_time = unit_time;
@@ -33,6 +42,7 @@ class JugglingEvent {
         this._ball_ref = ball !== undefined ? new CWeakRef<Ball>(ball) : undefined;
         this.ball_status = status === "THROW" ? "AIRBORNE" : "HELD";
         this.hand_status = status;
+        this.sound_name = sound_name;
     }
 
     get hand(): Hand {
@@ -101,6 +111,17 @@ class JugglingEvent {
 
     get is_caught(): boolean {
         return this.hand_status === "CATCH";
+    }
+
+    random_sound_name(): string {
+        if (Array.isArray(this.sound_name)) {
+            const random_idx = Math.floor(Math.random() * this.sound_name.length);
+            return this.sound_name[random_idx];
+        } else if (typeof this.sound_name === "string") {
+            return this.sound_name;
+        } else {
+            throw new Error("No sound_names have been provided.");
+        }
     }
 }
 

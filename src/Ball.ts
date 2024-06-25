@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { createRBTree, RBTree } from "./RBTree";
 import { GRAVITY } from "./constants";
 import { JugglingEvent } from "./Timeline";
+import * as Tone from "tone";
 
 // function create_audio(note_name: string): HTMLAudioElement {
 //     throw new Error("Not implemented");
@@ -15,28 +16,43 @@ class Ball {
     geometry: THREE.BufferGeometry;
     material: THREE.Material;
     mesh: THREE.Mesh;
-    //sound: HTMLAudioElement | undefined = undefined;
+    sound: Tone.Players | Tone.Player | undefined;
+    panner3D: Tone.Panner3D | undefined;
     timeline: RBTree<number, JugglingEvent>;
+    prev_time = 0;
 
-    constructor(color: number | string, radius: number, timeline?: RBTree<number, JugglingEvent>) {
+    constructor(
+        color: number | string,
+        radius: number,
+        sound?: Tone.Players | Tone.Player | string,
+        panner3D?: Tone.Panner3D,
+        timeline?: RBTree<number, JugglingEvent>
+    ) {
         this.color = color;
         this.radius = radius;
         this.geometry = new THREE.SphereGeometry(radius, 8, 4);
         this.material = new THREE.MeshPhongMaterial({ color: this.color });
         //TODO: CHeck if destroying mesh detroys material and or geometry.
         this.mesh = new THREE.Mesh(this.geometry, this.material);
+
         if (timeline === undefined) {
             this.timeline = createRBTree();
         } else {
             this.timeline = structuredClone(timeline);
         }
-        // if (typeof sound === "string") {
-        //     this.sound = create_audio(sound);
-        // } else {
-        //     this.sound = sound;
-        // }
+
+        if (typeof sound === "string") {
+            // Define a ball by its note.
+            throw new Error("Not implemented yet");
+        }
+        this.sound = sound;
+        this.panner3D = panner3D;
     }
 
+    /**
+     * @param time The time in seconds.
+     * @returns The position of the ball at that given time.
+     */
     get_position(time: number): THREE.Vector3 {
         const prev_event = this.timeline.le(time).value;
         const next_event = this.timeline.gt(time).value;
@@ -121,6 +137,10 @@ class Ball {
         return new THREE.Vector3(v0.x, -GRAVITY * t + v0.y, v0.z);
     }
 
+    /**
+     * @param time The time in seconds
+     * @returns The velocity of the ball at that given time.
+     */
     get_velocity(time: number) {
         const prev_event = this.timeline.le(time).value;
         const next_event = this.timeline.gt(time).value;
@@ -155,14 +175,39 @@ class Ball {
         }
     }
 
+    //TODO : make it so that event.sound if array or undefined in constructor ?
+    play_on_catch(time: number): void {
+        const prev_event = this.timeline.le(time).value;
+        if (prev_event !== undefined && this.prev_time < prev_event.time) {
+            // Play a sound
+            console.log("play");
+            if (this.sound instanceof Tone.Players) {
+                if (prev_event.sound_name !== undefined) {
+                    const sound_name = prev_event.random_sound_name();
+                    this.sound.player(sound_name).start();
+                }
+            } else if (this.sound instanceof Tone.Player) {
+                this.sound.start();
+            }
+        }
+        this.prev_time = time;
+    }
+
+    /**
+     * Updates the ball's position.
+     * @param time Time of the frame to render in seconds.
+     */
     render = (time: number): void => {
         //Receives the time in seconds.
-        this.mesh.position.copy(this.get_position(time));
+        const position = this.get_position(time);
+        this.mesh.position.copy(position);
+        this.panner3D?.setPosition(position.x, position.y, position.z);
     };
 
     /**
      * Properly deletes the 3D resources. Call when instance is not needed anymore to free ressources.
      */
+    //TODO: Delete audio nodes too.
     dispose() {
         this.geometry.dispose();
         this.material.dispose();

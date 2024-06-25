@@ -1,5 +1,9 @@
 import * as THREE from "three";
-import { resizeRendererToDisplaySize, Simulator } from "./Simulator";
+import {
+    resizeRendererToDisplaySize,
+    resizeRendererComposerToDisplaySize,
+    Simulator
+} from "./Simulator";
 import { Ball } from "./Ball";
 import { Juggler } from "./Juggler";
 import * as TWEAKPANE from "tweakpane";
@@ -10,13 +14,19 @@ import { Hand } from "./Hand";
 import { CubicHermiteSpline } from "./Spline";
 import { VECTOR3_STRUCTURE } from "./constants";
 import * as Tone from "tone";
+import { EffectComposer, OutlinePass, OutputPass, RenderPass } from "three/examples/jsm/Addons.js";
+import { TransportPlayback } from "./TransportPlayBack";
 
-//TODO : Test positional audio (too ressource expensive ?)
-//TODO : Using Tone.Player can't play two sounds at once.
 //TODO : With react, handle volume button being pressed as interaction ?
 //TODO : Test on phone if touch correctly starts audio
+//TODO : Add the option for no audio/normal audio/spatialized audio
+//TODO : Add option to mute a juggler/some balls ?
+//TODO : Add playbackrate managementt to own class over Tone.Transport
+// (to help handle seeking to the right time given a playback_rate / correct time when asking for the audio time)
+//TODO : Camecase or underscores ?
 
-const transport = Tone.getTransport();
+//const transport = Tone.getTransport();
+const transport = new TransportPlayback();
 
 const handle_load_end = (function () {
     let load_ready = 0;
@@ -81,68 +91,68 @@ async function handle_sounds_loaded() {
     handle_load_end();
 }
 
-const sfx = new Tone.Players({
-    urls: {
-        heavy_hit1: "grelot_balls_sfx/heavy_hit1.mp3",
-        heavy_hit2: "grelot_balls_sfx/heavy_hit2.mp3",
-        heavy_hit3: "grelot_balls_sfx/heavy_hit3.mp3",
-        normal_hit1: "grelot_balls_sfx/normal_hit1.mp3",
-        normal_hit2: "grelot_balls_sfx/normal_hit2.mp3",
-        weak_hit1: "grelot_balls_sfx/weak_hit1.mp3",
-        weak_hit2: "grelot_balls_sfx/weak_hit2.mp3",
-        shaker: "grelot_balls_sfx/shaker.mp3",
-        weak_hit_shaker: "grelot_balls_sfx/weak_hit_shaker.mp3"
-    }
-});
+const sfx_buffers = {
+    heavy_hit1: new Tone.ToneAudioBuffer("grelot_balls_sfx/heavy_hit1.mp3"),
+    heavy_hit2: new Tone.ToneAudioBuffer("grelot_balls_sfx/heavy_hit2.mp3"),
+    heavy_hit3: new Tone.ToneAudioBuffer("grelot_balls_sfx/heavy_hit3.mp3"),
+    normal_hit1: new Tone.ToneAudioBuffer("grelot_balls_sfx/normal_hit1.mp3"),
+    normal_hit2: new Tone.ToneAudioBuffer("grelot_balls_sfx/normal_hit2.mp3"),
+    weak_hit1: new Tone.ToneAudioBuffer("grelot_balls_sfx/weak_hit1.mp3"),
+    weak_hit2: new Tone.ToneAudioBuffer("grelot_balls_sfx/weak_hit2.mp3"),
+    shaker: new Tone.ToneAudioBuffer("grelot_balls_sfx/shaker.mp3"),
+    weak_hit_shaker: new Tone.ToneAudioBuffer("grelot_balls_sfx/weak_hit_shaker.mp3")
+};
 
-const sfx_gain = new Tone.Volume().toDestination();
-sfx.connect(sfx_gain);
-//Playing sounds test
-//await Tone.loaded().then(() => {
-//sfx.player("heavy_hit1").start("+0");
-//sfx.player("heavy_hit2").start("+1");
-//sfx.player("heavy_hit3").start("+2");
-// sfx.player("normal_hit1").start("+3");
-// sfx.player("normal_hit2").start("+4");
-// sfx.player("weak_hit1").start("+5");
-// sfx.player("weak_hit2").start("+6");
-// sfx.player("shaker").start("+7");
-// sfx.player("weak_hit_shaker").start("+8");
-//});
+const music = new Tone.Player("petite_fleur_vincent.mp3");
+//Panner Model : Sound is stereo, no decrease based on distance.
+const panner = new Tone.Panner3D({ panningModel: "equalpower", rolloffFactor: 0 });
 
-const music = new Tone.Player("petite_fleur_vincent.mp3").toDestination();
 const music_gain = new Tone.Gain().toDestination();
-music.connect(music_gain);
+const sfx_gain = new Tone.Gain().toDestination();
+music.connect(panner);
+panner.connect(music_gain);
+// music_gain.gain.value = 0;
+sfx_gain.gain.value = 0;
 music.sync().start(0);
 await Tone.loaded();
-// await Tone.loaded();
-// transport.start();
-
-// await Tone.loaded().then(() => {
-//     if (Tone.getContext().state === "running") {
-//         //transport.start();
-//     }
-// });
+await Tone.start();
+music.playbackRate = 1; //TODO Continuer ici.
+// console.log(transport.bpm);
+// transport.bpm.value = transport.bpm.value / 2;
+transport.start();
 
 handle_sounds_loaded().catch(() => {
     throw new Error();
 });
+
+// const player = new Tone.Players(sfx_buffers);
+// const panner = new Tone.Panner3D();
+// player.connect(panner);
+// panner.connect(sfx_gain);
+//Playing sounds test
+// const sfx = new Tone.Players(sfx_buffers);
+// const panner = new Tone.Panner3D({ maxDistance: 1000 });
+// sfx.connect(panner);
+// panner.connect(sfx_gain);
+// await Tone.loaded().then(() => {
+//     sfx.player("heavy_hit1").start("+0");
+//     sfx.player("heavy_hit2").start("+1");
+//     sfx.player("heavy_hit3").start("+2");
+//     sfx.player("normal_hit1").start("+3");
+//     sfx.player("normal_hit2").start("+4");
+//     sfx.player("weak_hit1").start("+5");
+//     sfx.player("weak_hit2").start("+6");
+//     sfx.player("shaker").start("+7");
+//     sfx.player("weak_hit_shaker").start("+8");
+// });
 
 const simulator = new Simulator("#simulator_canvas");
 const scene = simulator.scene;
 const renderer = simulator.renderer;
 const camera = simulator.camera;
 
-// const arm_length = 1;
-// const forearm_length = 1;
-// const arm_material = new THREE.MeshPhongMaterial({ color: "white" });
-// const elbow_material = new THREE.MeshPhongMaterial({ color: "red" });
-// const elbow_geometry = new THREE.SphereGeometry(0.3);
-// const arm_geometry = new THREE.BoxGeometry(arm_length, 0.2, 0.2);
-// const arm_mesh = new THREE.Mesh(arm_geometry, arm_material);
-// const forearm_mesh = new THREE.Mesh(arm_geometry, arm_material);
-// const elbow_mesh = new THREE.Mesh(elbow_geometry, elbow_material);
-
+//TODO : Merge geometries ?
+let outlined_mesh: THREE.Mesh;
 {
     //Chest
     let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
@@ -237,6 +247,9 @@ const camera = simulator.camera;
 
     //Feet
     //???
+
+    //Outline ?
+    outlined_mesh = chest;
 }
 
 simulator.jugglers = [new Juggler(2.0)];
@@ -253,10 +266,19 @@ vincent.mesh.rotateY(Math.PI / 2);
 // nicolas.mesh.position.set(-1, 0, -1);
 // nicolas.mesh.rotateY(-Math.PI / 2);
 
-simulator.balls = [new Ball("red", 0.08), new Ball("green", 0.08), new Ball("blue", 0.08)];
+for (const color of ["red", "green", "blue"]) {
+    const player = new Tone.Players(sfx_buffers);
+    const panner = new Tone.Panner3D({ panningModel: "HRTF", rolloffFactor: 1 });
+    player.connect(panner);
+    panner.connect(sfx_gain);
+    simulator.balls.push(new Ball(color, 0.08, player, panner));
+}
+
 const ball0 = simulator.balls[0];
 const ball1 = simulator.balls[1];
 const ball2 = simulator.balls[2];
+
+// ball0.sound.player("normal_hit").start("+0.5");
 
 simulator.balls.forEach((ball) => {
     scene.add(ball.mesh);
@@ -269,10 +291,11 @@ function lance(
     flight_time: number,
     source: Hand,
     target: Hand,
-    unit_time: number
+    unit_time: number,
+    sound?: string[] | string
 ): void {
     const ev1 = new JugglingEvent(time, unit_time, "THROW", source, ball);
-    const ev2 = new JugglingEvent(time + flight_time, unit_time, "CATCH", target, ball);
+    const ev2 = new JugglingEvent(time + flight_time, unit_time, "CATCH", target, ball, sound);
     ev1.pair_with(ev2);
     ball.timeline = ball.timeline.insert(ev1.time, ev1);
     ball.timeline = ball.timeline.insert(ev2.time, ev2);
@@ -291,6 +314,42 @@ function lance(
 // const tubeMesh = new THREE.Mesh(tubeGeometry, material);
 // scene.add(tubeMesh);
 
+//////////////////////////////////////////////////////////////////////////////
+// Edit here
+//////////////////////////////////////////////////////////////////////////////
+
+// Pattern
+//const pattern = [5];
+// const pattern = [3,3,4,5,1,5,1,4,1];
+
+// // Configuration
+// const colors = ["red", "green", "blue", "purple", "yellow"];
+// const u = 0.25;
+// const d = u / 2;
+
+// // Build the balls
+// const n_balls = pattern.reduce( ( p, c ) => p + c, 0 ) / pattern.length;
+// simulator.balls = Array(n_balls);
+// for (let i=0; i < simulator.balls.length; i++)
+//     simulator.balls[i] = new Ball(colors[i], 0.04)
+
+// // Build the sequence of throws
+// const N = pattern.length * 50;
+// const held_balls = Array(N);
+// for (let i = 0; i < simulator.balls.length; i++) {
+//     held_balls[i] = simulator.balls[i];
+// }
+// for (let i = 0; i < N - pattern.length; i++) {
+//     let h = pattern[i % pattern.length];
+//     held_balls[i+h] = held_balls[i];
+//     lance(held_balls[i], i * u, h * u - d, vincent.hands[i % 2], vincent.hands[(i + h) % 2], u);
+// }
+//console.log(held_balls);
+
+//////////////////////////////////////////////////////////////////////////////
+// End edit here
+//////////////////////////////////////////////////////////////////////////////
+
 const u = 0.25;
 const d = u / 2;
 for (let i = 0; i < 100; i++) {
@@ -300,7 +359,8 @@ for (let i = 0; i < 100; i++) {
         3 * u - d,
         vincent.hands[i % 2],
         vincent.hands[(i + 1) % 2],
-        u
+        u,
+        ["normal_hit1", "normal_hit2"]
     );
 }
 
@@ -385,7 +445,7 @@ const blade = pane.addBinding(monitor, "audio_time", {
     step: 0.1
 });
 blade.on("change", (ev) => {
-    console.log(`Value : ${ev.value} Last : ${ev.last}`);
+    //console.log(`Value : ${ev.value} Last : ${ev.last}`);
     if (ev.last) {
         transport.seconds = ev.value;
     }
@@ -404,6 +464,24 @@ play_blade.on("change", async (ev) => {
     }
 });
 
+//TODO : Remove composer if not needed.
+// const composer = new EffectComposer(renderer);
+// const render_pass = new RenderPass(scene, camera);
+// composer.addPass(render_pass);
+// const canvas = renderer.domElement;
+// const outline_pass = new OutlinePass(
+//     new THREE.Vector2(canvas.clientWidth, canvas.clientHeight),
+//     scene,
+//     camera
+// );
+// composer.addPass(outline_pass);
+// outline_pass.selectedObjects = [outlined_mesh];
+// //ball0.material.transparent = true;
+// //ball0.material.opacity = 0;
+// // composer.setPixelRatio(window.devicePixelRatio);
+// const output_pass = new OutputPass();
+// composer.addPass(output_pass);
+
 function render(t: number) {
     fpsGraph.begin();
     const time = t * 0.001; // convert time to seconds
@@ -413,16 +491,34 @@ function render(t: number) {
     // console.log(`Without look ahead : ${transport.immediate()}`);
     // console.log(`With look ahead : ${transport.now()}`);
     // console.log(`Look ahead : ${transport.context.lookAhead}`);
+
     resizeRendererToDisplaySize(renderer, camera);
+    // resizeRendererComposerToDisplaySize(renderer, composer, camera);
 
     simulator.balls.forEach((ball) => {
         ball.render(audio_time);
+        ball.play_on_catch(audio_time);
     });
     simulator.jugglers.forEach((juggler) => {
         juggler.render(audio_time);
     });
 
+    const listener = Tone.getListener();
+    const camera_pos = camera.localToWorld(new THREE.Vector3(0, 0, 0));
+    listener.positionX.value = camera_pos.x;
+    listener.positionY.value = camera_pos.y;
+    listener.positionZ.value = camera_pos.z;
+    const camera_dir = camera.localToWorld(new THREE.Vector3(0, 0, -1)).sub(camera_pos);
+    listener.forwardX.value = camera_dir.x;
+    listener.forwardY.value = camera_dir.y;
+    listener.forwardZ.value = camera_dir.z;
+    const camera_up = camera.localToWorld(camera.up.clone()).sub(camera_pos);
+    listener.upX.value = camera_up.x;
+    listener.upY.value = camera_up.y;
+    listener.upZ.value = camera_up.z;
+
     renderer.render(scene, camera);
+    // composer.render();
 
     fpsGraph.end();
     requestAnimationFrame(render);

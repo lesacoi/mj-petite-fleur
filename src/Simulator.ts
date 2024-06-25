@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Ball } from "./Ball";
 import { Juggler } from "./Juggler";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { EffectComposer } from "three/examples/jsm/Addons.js";
 
 function resizeRendererToDisplaySize(
     renderer: THREE.WebGLRenderer,
@@ -11,17 +12,29 @@ function resizeRendererToDisplaySize(
     const pixelRatio = window.devicePixelRatio;
     const width = Math.floor(canvas.clientWidth * pixelRatio);
     const height = Math.floor(canvas.clientHeight * pixelRatio);
-    const needResize = canvas.width !== width || canvas.height !== height;
-    if (needResize) {
+    if (canvas.width !== width || canvas.height !== height) {
         renderer.setSize(width, height, false);
-        const canvas = renderer.domElement;
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
     }
-    return needResize;
 }
 
-
+function resizeRendererComposerToDisplaySize(
+    renderer: THREE.WebGLRenderer,
+    composer: EffectComposer,
+    camera: THREE.PerspectiveCamera
+) {
+    const canvas = renderer.domElement;
+    const pixelRatio = window.devicePixelRatio;
+    const width = Math.floor(canvas.clientWidth * pixelRatio);
+    const height = Math.floor(canvas.clientHeight * pixelRatio);
+    if (canvas.width !== width || canvas.height !== height) {
+        renderer.setSize(width, height, false);
+        composer.setSize(width, height);
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+    }
+}
 
 class Simulator {
     renderer: THREE.WebGLRenderer;
@@ -98,4 +111,4 @@ class Simulator {
 //     return juggler_mesh;
 // }
 
-export { Simulator, resizeRendererToDisplaySize };
+export { Simulator, resizeRendererToDisplaySize, resizeRendererComposerToDisplaySize };
