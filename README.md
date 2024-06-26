@@ -15,8 +15,6 @@ This project uses:
 
 ## Local install (dev)
 
-**TODO :** See if it really works
-
 It is assumed you have pnpm installed on your machine. See the [installation page](https://pnpm.io/installation) in their documentation. The rest of the installation should also work with npm, although pnpm version locking isn't accessible to npm.
 
 Simply fork this repository, and then use :
