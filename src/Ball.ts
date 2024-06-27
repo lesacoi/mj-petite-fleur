@@ -180,7 +180,6 @@ class Ball {
         const prev_event = this.timeline.le(time).value;
         if (prev_event !== undefined && this.prev_time < prev_event.time) {
             // Play a sound
-            console.log("play");
             if (this.sound instanceof Tone.Players) {
                 if (prev_event.sound_name !== undefined) {
                     const sound_name = prev_event.random_sound_name();

@@ -25,8 +25,9 @@ import { TransportPlayback } from "./TransportPlayBack";
 // (to help handle seeking to the right time given a playback_rate / correct time when asking for the audio time)
 //TODO : Camecase or underscores ?
 
-//const transport = Tone.getTransport();
-const transport = new TransportPlayback();
+const transport = Tone.getTransport();
+// const transport = new TransportPlayback();
+const context = Tone.getContext();
 
 const handle_load_end = (function () {
     let load_ready = 0;
@@ -103,23 +104,32 @@ const sfx_buffers = {
     weak_hit_shaker: new Tone.ToneAudioBuffer("grelot_balls_sfx/weak_hit_shaker.mp3")
 };
 
-const music = new Tone.Player("petite_fleur_vincent.mp3");
+// const music = new Tone.Player("petite_fleur_vincent.mp3");
+const music1 = new Audio("petite_fleur_vincent.mp3");
+music1.play();
+const music = context.createMediaElementSource(music1);
+
 //Panner Model : Sound is stereo, no decrease based on distance.
-const panner = new Tone.Panner3D({ panningModel: "equalpower", rolloffFactor: 0 });
+// const panner = new Tone.Panner3D({ panningModel: "equalpower", rolloffFactor: 0 });
 
 const music_gain = new Tone.Gain().toDestination();
+// music.connect(music_gain);
+Tone.connect(music, music_gain);
 const sfx_gain = new Tone.Gain().toDestination();
-music.connect(panner);
-panner.connect(music_gain);
+// music.connect(panner);
+// panner.connect(music_gain);
 // music_gain.gain.value = 0;
 sfx_gain.gain.value = 0;
-music.sync().start(0);
+//music.sync().start(1);
+
 await Tone.loaded();
 await Tone.start();
-music.playbackRate = 1; //TODO Continuer ici.
-// console.log(transport.bpm);
-// transport.bpm.value = transport.bpm.value / 2;
-transport.start();
+// music.playbackRate = 1; //TODO Continuer ici.
+// // console.log(transport.bpm);
+// // transport.bpm.value = transport.bpm.value / 2;
+// transport.start();
+// transport.playback_rate = 2;
+// music.playbackRate = 2;
 
 handle_sounds_loaded().catch(() => {
     throw new Error();
@@ -152,7 +162,7 @@ const renderer = simulator.renderer;
 const camera = simulator.camera;
 
 //TODO : Merge geometries ?
-let outlined_mesh: THREE.Mesh;
+// let outlined_mesh: THREE.Mesh;
 {
     //Chest
     let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
@@ -249,7 +259,7 @@ let outlined_mesh: THREE.Mesh;
     //???
 
     //Outline ?
-    outlined_mesh = chest;
+    // outlined_mesh = chest;
 }
 
 simulator.jugglers = [new Juggler(2.0)];
@@ -274,9 +284,9 @@ for (const color of ["red", "green", "blue"]) {
     simulator.balls.push(new Ball(color, 0.08, player, panner));
 }
 
-const ball0 = simulator.balls[0];
-const ball1 = simulator.balls[1];
-const ball2 = simulator.balls[2];
+// const ball0 = simulator.balls[0];
+// const ball1 = simulator.balls[1];
+// const ball2 = simulator.balls[2];
 
 // ball0.sound.player("normal_hit").start("+0.5");
 
@@ -302,17 +312,6 @@ function lance(
     source.timeline = source.timeline.insert(ev1.time, ev1);
     target.timeline = target.timeline.insert(ev2.time, ev2);
 }
-
-// lance(ball0, 1, 1, vincent.right_hand, nicolas.left_hand, 0.5);
-// const spline = vincent.right_hand.get_spline(
-//     vincent.right_hand.timeline.lt(0.9).value,
-//     vincent.right_hand.timeline.gt(0.9).value
-// );
-// const curve = new SplineThree(spline);
-// const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.01, 8, false);
-// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-// const tubeMesh = new THREE.Mesh(tubeGeometry, material);
-// scene.add(tubeMesh);
 
 //////////////////////////////////////////////////////////////////////////////
 // Edit here
@@ -373,49 +372,6 @@ for (let i = 0; i < 100; i++) {
 // lance(ball0, 1, 1, right_hand, left_hand, 0.5);
 // lance(ball0, 1, 1, right_hand, left_hand, 0.5);
 
-//TODO : Ball and Hand inherit Object3D For easier manipulation ?
-//TODO : How to have a ball taht stays in the hand ?
-
-// const ev1 = new JugglingEvent(1, 0.5, "THROW", vincent.right_hand, ball0);
-// const ev2 = new JugglingEvent(1.2, 0.5, "CATCH", nicolas.left_hand, ball0);
-// const ev3 = new JugglingEvent(2, 0.5, "THROW", vincent.left_hand, ball1);
-// const ev4 = new JugglingEvent(2.2, 0.5, "CATCH", vincent.left_hand, ball1);
-// const ev5 = new JugglingEvent(1, 0.5, "THROW", vincent.right_hand, ball0);
-// const ev6 = new JugglingEvent(1.4, 0.5, "CATCH", nicolas.left_hand, ball0);
-
-// //TODO: REmplacer l'appareillage par une recherche dans la timeline de la balle.
-// ev1.pair_with(ev2);
-// ev3.pair_with(ev4);
-// ev5.pair_with(ev6);
-// ball0.timeline = ball0.timeline.insert(ev1.time, ev1);
-// ball0.timeline = ball0.timeline.insert(ev2.time, ev2);
-// ball1.timeline = ball1.timeline.insert(ev3.time, ev3);
-// ball1.timeline = ball1.timeline.insert(ev4.time, ev4);
-// ball2.timeline = ball2.timeline.insert(ev5.time, ev5);
-// ball2.timeline = ball2.timeline.insert(ev6.time, ev6);
-
-// vincent.right_hand.timeline = vincent.right_hand.timeline.insert(ev1.time, ev1);
-// nicolas.left_hand.timeline = nicolas.left_hand.timeline.insert(ev2.time, ev2);
-// vincent.left_hand.timeline = vincent.left_hand.timeline.insert(ev3.time, ev3);
-// vincent.left_hand.timeline = vincent.left_hand.timeline.insert(ev4.time, ev4);
-// vincent.right_hand.timeline = vincent.right_hand.timeline.insert(ev5.time, ev5);
-// nicolas.left_hand.timeline = nicolas.left_hand.timeline.insert(ev6.time, ev6);
-
-// const curvepath = new THREE.CurvePath();
-// const curve1 = new SplineThree(right_hand.get_spline(undefined));
-
-// const spline = new CubicHermiteSpline<THREE.Vector3>(
-//     VECTOR3_STRUCTURE,
-//     [new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 1)],
-//     [new THREE.Vector3(1, 1, 0), new THREE.Vector3(1, -1, 0)]
-// );
-// const curve = new SplineThree(spline);
-// console.log(spline.interpolate(0));
-// console.log(spline.interpolate(1));
-// const tubeGeometry = new THREE.TubeGeometry(curve, 64, 0.01, 8, false);
-// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-// const tubeMesh = new THREE.Mesh(tubeGeometry, material);
-// scene.add(tubeMesh);
 const tweakpane_container = document.querySelector(".tp-dfwv");
 if (!(tweakpane_container instanceof HTMLElement)) {
     throw new Error();
@@ -431,7 +387,10 @@ const monitor = {
     video_time: 0,
     audio_time: 0,
     audio_control: 0,
-    transport_play: transport.state === "started"
+    playback_rate: 1,
+    transport_play: transport.state === "started",
+    music: music,
+    music1: music1
 };
 pane.addBinding(monitor, "video_time", {
     readonly: true
@@ -441,26 +400,48 @@ pane.addBinding(monitor, "audio_time", {
 });
 const blade = pane.addBinding(monitor, "audio_time", {
     min: 0,
-    max: music.buffer.duration,
+    max: 100,
     step: 0.1
 });
 blade.on("change", (ev) => {
     //console.log(`Value : ${ev.value} Last : ${ev.last}`);
     if (ev.last) {
-        transport.seconds = ev.value;
+        //console.log(transport.playback_rate);
+        // console.log(transport.seconds);
+        //console.log(transport.transport.seconds);
+        // transport.seconds = ev.value;
+        music1.currentTime = ev.value;
+        // console.log(music1.currentTime);
+        // console.log(context.currentTime);
+        if (monitor.transport_play && music1.paused) {
+            music1.play();
+        }
+    }
+});
+
+const blade_playback_rate = pane.addBinding(monitor, "playback_rate", {
+    min: 0.5,
+    max: 2,
+    step: 0.1
+});
+blade_playback_rate.on("change", (ev) => {
+    if (ev.last) {
+        music1.playbackRate = ev.value;
     }
 });
 const play_blade = pane.addBinding(monitor, "transport_play", { label: "Play" });
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 play_blade.on("change", async (ev) => {
     if (!ev.value) {
-        transport.pause();
+        // transport.pause();
+        music1.pause();
     } else {
         if (Tone.getContext().state === "suspended") {
             await Tone.start();
         }
         await Tone.loaded();
-        transport.start();
+        // transport.start();
+        await music1.play();
     }
 });
 
@@ -481,13 +462,20 @@ play_blade.on("change", async (ev) => {
 // // composer.setPixelRatio(window.devicePixelRatio);
 // const output_pass = new OutputPass();
 // composer.addPass(output_pass);
-
+transport.start();
 function render(t: number) {
     fpsGraph.begin();
     const time = t * 0.001; // convert time to seconds
-    const audio_time = transport.seconds;
+    // const audio_time = transport.seconds;
+    const audio_time = music1.currentTime;
+    // const audio_time = time;
+    // const audio_time = context.currentTime / 2;
     monitor.video_time = time;
     monitor.audio_time = audio_time;
+    // monitor.audio_time = music1.currentTime;
+    // console.log(
+    //     `${music1.currentTime} ${context.currentTime} ${music1.currentTime - context.currentTime}`
+    // );
     // console.log(`Without look ahead : ${transport.immediate()}`);
     // console.log(`With look ahead : ${transport.now()}`);
     // console.log(`Look ahead : ${transport.context.lookAhead}`);
