@@ -21,7 +21,6 @@ const context = Tone.getContext();
 
 const handle_load_end = (function () {
     let load_ready = 0;
-
     return function () {
         load_ready++;
         if (load_ready === 2) {
@@ -39,9 +38,9 @@ const handle_load_end = (function () {
 
 // Handling of the first user input before playing audio.
 const first_interaction_event_types = ["mousedown", "keydown", "touchstart"];
+
 async function handle_first_interaction(event: Event) {
     for (const event_type of first_interaction_event_types) {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         event.currentTarget?.removeEventListener(event_type, handle_first_interaction, true);
     }
     const text_element = document.querySelector("#wait_user");
@@ -68,7 +67,6 @@ async function handle_first_interaction(event: Event) {
 }
 
 for (const event_type of first_interaction_event_types) {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     document.body.addEventListener(event_type, handle_first_interaction, true);
 }
 
@@ -101,12 +99,12 @@ Tone.connect(music_tone, music_gain);
 const sfx_gain = new Tone.Gain().toDestination();
 sfx_gain.gain.value = 0;
 
-await Tone.loaded();
-await Tone.start();
-
-handle_sounds_loaded().catch(() => {
-    throw new Error("Oh no...");
-});
+// await Tone.loaded();
+// await Tone.start();
+music.addEventListener("canplaythrough", handle_sounds_loaded, { once: true });
+// handle_sounds_loaded().catch(() => {
+//     throw new Error("Oh no...");
+// });
 
 // await Tone.loaded().then(() => {
 //     sfx.player("heavy_hit1").start("+0");
@@ -130,6 +128,8 @@ const vincent = simulator.jugglers[0];
 vincent.mesh.position.set(-1, 0, 1);
 vincent.mesh.rotateY(Math.PI / 2);
 
+//TODO : Handle properly this await (by loading the sounds for the balls only when Tone has loaded the buffer.)
+await Tone.loaded();
 for (const color of ["red", "green", "blue"]) {
     const player = new Tone.Players(sfx_buffers);
     const panner = new Tone.Panner3D({ panningModel: "HRTF", rolloffFactor: 1 });
@@ -232,7 +232,7 @@ const monitor = {
     audio_control: 0,
     playback_rate: 1,
     transport_play: transport.state === "started",
-    music1: music
+    music: music
 };
 pane.addBinding(monitor, "video_time", {
     readonly: true
@@ -267,7 +267,6 @@ blade_playback_rate.on("change", (ev) => {
     }
 });
 const play_blade = pane.addBinding(monitor, "transport_play", { label: "Play" });
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
 play_blade.on("change", async (ev) => {
     if (!ev.value) {
         // transport.pause();
