@@ -1,29 +1,19 @@
 import * as THREE from "three";
-import {
-    resizeRendererToDisplaySize,
-    resizeRendererComposerToDisplaySize,
-    Simulator
-} from "./Simulator";
+import { resizeRendererToDisplaySize, Simulator } from "./Simulator";
 import { Ball } from "./Ball";
 import { Juggler } from "./Juggler";
 import * as TWEAKPANE from "tweakpane";
 import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 import { JugglingEvent } from "./Timeline";
-import { SplineThree } from "./utils";
 import { Hand } from "./Hand";
-import { CubicHermiteSpline } from "./Spline";
-import { VECTOR3_STRUCTURE } from "./constants";
 import * as Tone from "tone";
-import { EffectComposer, OutlinePass, OutputPass, RenderPass } from "three/examples/jsm/Addons.js";
-import { TransportPlayback } from "./TransportPlayBack";
 
 //TODO : With react, handle volume button being pressed as interaction ?
 //TODO : Test on phone if touch correctly starts audio
 //TODO : Add the option for no audio/normal audio/spatialized audio
 //TODO : Add option to mute a juggler/some balls ?
-//TODO : Add playbackrate managementt to own class over Tone.Transport
-// (to help handle seeking to the right time given a playback_rate / correct time when asking for the audio time)
-//TODO : Camecase or underscores ?
+//TODO : Camlecase or underscores ?
+//TODO Bugged buffer load if not await in main code.
 
 const transport = Tone.getTransport();
 // const transport = new TransportPlayback();
@@ -104,46 +94,20 @@ const sfx_buffers = {
     weak_hit_shaker: new Tone.ToneAudioBuffer("grelot_balls_sfx/weak_hit_shaker.mp3")
 };
 
-// const music = new Tone.Player("petite_fleur_vincent.mp3");
-const music1 = new Audio("petite_fleur_vincent.mp3");
-music1.play();
-const music = context.createMediaElementSource(music1);
-
-//Panner Model : Sound is stereo, no decrease based on distance.
-// const panner = new Tone.Panner3D({ panningModel: "equalpower", rolloffFactor: 0 });
-
+const music = new Audio("petite_fleur_vincent.mp3");
+const music_tone = context.createMediaElementSource(music);
 const music_gain = new Tone.Gain().toDestination();
-// music.connect(music_gain);
-Tone.connect(music, music_gain);
+Tone.connect(music_tone, music_gain);
 const sfx_gain = new Tone.Gain().toDestination();
-// music.connect(panner);
-// panner.connect(music_gain);
-// music_gain.gain.value = 0;
 sfx_gain.gain.value = 0;
-//music.sync().start(1);
 
 await Tone.loaded();
 await Tone.start();
-// music.playbackRate = 1; //TODO Continuer ici.
-// // console.log(transport.bpm);
-// // transport.bpm.value = transport.bpm.value / 2;
-// transport.start();
-// transport.playback_rate = 2;
-// music.playbackRate = 2;
 
 handle_sounds_loaded().catch(() => {
-    throw new Error();
+    throw new Error("Oh no...");
 });
 
-// const player = new Tone.Players(sfx_buffers);
-// const panner = new Tone.Panner3D();
-// player.connect(panner);
-// panner.connect(sfx_gain);
-//Playing sounds test
-// const sfx = new Tone.Players(sfx_buffers);
-// const panner = new Tone.Panner3D({ maxDistance: 1000 });
-// sfx.connect(panner);
-// panner.connect(sfx_gain);
 // await Tone.loaded().then(() => {
 //     sfx.player("heavy_hit1").start("+0");
 //     sfx.player("heavy_hit2").start("+1");
@@ -161,120 +125,10 @@ const scene = simulator.scene;
 const renderer = simulator.renderer;
 const camera = simulator.camera;
 
-//TODO : Merge geometries ?
-// let outlined_mesh: THREE.Mesh;
-{
-    //Chest
-    let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
-        0.6 * Math.SQRT1_2,
-        0.4 * Math.SQRT1_2,
-        1,
-        4,
-        1
-    );
-    chest_geometry.rotateY(Math.PI / 4);
-    chest_geometry = chest_geometry.toNonIndexed();
-    chest_geometry.computeVertexNormals();
-    chest_geometry.scale(0.5, 1, 1);
-    const chest_material = new THREE.MeshPhongMaterial({ color: "green" });
-    const chest = new THREE.Mesh(chest_geometry, chest_material);
-    chest.position.set(0, 1.7, 0);
-    scene.add(chest);
-
-    //Head
-    const head_geometry = new THREE.SphereGeometry(0.2);
-    head_geometry.scale(0.8, 1, 0.8);
-    const head = new THREE.Mesh(head_geometry, chest_material);
-    head.position.set(0, 0.75, 0);
-    chest.add(head);
-
-    //Shoulders
-    const shoulder_material = new THREE.MeshPhongMaterial({ color: "red" });
-    const shoulder_geometry = new THREE.SphereGeometry(0.08);
-    const right_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
-    right_shoulder.position.set(0, 0.5, 0.3);
-    //right_shoulder.material.visible = false;
-    right_shoulder.rotateZ(-Math.PI / 2);
-    right_shoulder.rotateY(-0.2);
-    chest.add(right_shoulder);
-    const left_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
-    left_shoulder.position.set(0, 0.5, -0.3);
-    left_shoulder.rotateZ(-Math.PI / 2);
-    left_shoulder.rotateY(0.2);
-    chest.add(left_shoulder);
-
-    //Arms
-    const arm_length = 0.55;
-    const arm_material = new THREE.MeshPhongMaterial({ color: "white" });
-    const arm_geometry = new THREE.BoxGeometry(arm_length, 0.05, 0.05);
-    // const arm_geometry = new THREE.CylinderGeometry(0.03, 0.03, arm_length);
-    // arm_geometry.rotateZ(Math.PI / 2);
-    const right_arm = new THREE.Mesh(arm_geometry, arm_material);
-    right_arm.position.set(arm_length / 2, 0, 0);
-    right_shoulder.add(right_arm);
-    const left_arm = new THREE.Mesh(arm_geometry, arm_material);
-    left_arm.position.set(arm_length / 2, 0, 0);
-    left_shoulder.add(left_arm);
-
-    //Elbows
-    const elbow_geometry = new THREE.SphereGeometry(0.05);
-    const right_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
-    right_elbow.position.set(arm_length / 2, 0, 0);
-    right_elbow.rotateZ(Math.PI / 2);
-    right_arm.add(right_elbow);
-    const left_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
-    left_elbow.position.set(arm_length / 2, 0, 0);
-    left_elbow.rotateZ(Math.PI / 2);
-    left_arm.add(left_elbow);
-
-    //Forearms
-    const right_forearm = new THREE.Mesh(arm_geometry, arm_material);
-    right_forearm.position.set(arm_length / 2, 0, 0);
-    right_elbow.add(right_forearm);
-    const left_forearm = new THREE.Mesh(arm_geometry, arm_material);
-    left_forearm.position.set(arm_length / 2, 0, 0);
-    left_elbow.add(left_forearm);
-
-    //Hands
-    const hand_geometry = new THREE.SphereGeometry(0.05);
-    hand_geometry.scale(1, 0.8, 0.8);
-    const hand_material = new THREE.MeshPhongMaterial({ color: "black" });
-    const right_hand = new THREE.Mesh(hand_geometry, hand_material);
-    right_hand.position.set(arm_length / 2, 0, 0);
-    right_forearm.add(right_hand);
-    const left_hand = new THREE.Mesh(hand_geometry, hand_material);
-    left_hand.position.set(arm_length / 2, 0, 0);
-    left_forearm.add(left_hand);
-
-    //Legs
-    const leg_geometry = new THREE.BoxGeometry(0.15, 1.2, 0.1);
-    const right_leg = new THREE.Mesh(leg_geometry, chest_material);
-    right_leg.position.set(0, -1.1, 0.15);
-    chest.add(right_leg);
-    const left_leg = new THREE.Mesh(leg_geometry, chest_material);
-    left_leg.position.set(0, -1.1, -0.15);
-    chest.add(left_leg);
-
-    //Feet
-    //???
-
-    //Outline ?
-    // outlined_mesh = chest;
-}
-
 simulator.jugglers = [new Juggler(2.0)];
 const vincent = simulator.jugglers[0];
-//const nicolas = simulator.jugglers[1];
-// const right_hand = juggler.hands[0];
-// const left_hand = juggler.hands[1];
-simulator.jugglers.forEach((juggler) => {
-    scene.add(juggler.mesh);
-});
-
 vincent.mesh.position.set(-1, 0, 1);
 vincent.mesh.rotateY(Math.PI / 2);
-// nicolas.mesh.position.set(-1, 0, -1);
-// nicolas.mesh.rotateY(-Math.PI / 2);
 
 for (const color of ["red", "green", "blue"]) {
     const player = new Tone.Players(sfx_buffers);
@@ -283,17 +137,6 @@ for (const color of ["red", "green", "blue"]) {
     panner.connect(sfx_gain);
     simulator.balls.push(new Ball(color, 0.08, player, panner));
 }
-
-// const ball0 = simulator.balls[0];
-// const ball1 = simulator.balls[1];
-// const ball2 = simulator.balls[2];
-
-// ball0.sound.player("normal_hit").start("+0.5");
-
-simulator.balls.forEach((ball) => {
-    scene.add(ball.mesh);
-    //ball.mesh.visible = false;
-});
 
 function lance(
     ball: Ball,
@@ -389,8 +232,7 @@ const monitor = {
     audio_control: 0,
     playback_rate: 1,
     transport_play: transport.state === "started",
-    music: music,
-    music1: music1
+    music1: music
 };
 pane.addBinding(monitor, "video_time", {
     readonly: true
@@ -404,17 +246,12 @@ const blade = pane.addBinding(monitor, "audio_time", {
     step: 0.1
 });
 blade.on("change", (ev) => {
-    //console.log(`Value : ${ev.value} Last : ${ev.last}`);
     if (ev.last) {
-        //console.log(transport.playback_rate);
-        // console.log(transport.seconds);
-        //console.log(transport.transport.seconds);
-        // transport.seconds = ev.value;
-        music1.currentTime = ev.value;
-        // console.log(music1.currentTime);
-        // console.log(context.currentTime);
-        if (monitor.transport_play && music1.paused) {
-            music1.play();
+        music.currentTime = ev.value;
+        if (monitor.transport_play && music.paused) {
+            music.play().catch(() => {
+                throw new Error("Problem");
+            });
         }
     }
 });
@@ -426,7 +263,7 @@ const blade_playback_rate = pane.addBinding(monitor, "playback_rate", {
 });
 blade_playback_rate.on("change", (ev) => {
     if (ev.last) {
-        music1.playbackRate = ev.value;
+        music.playbackRate = ev.value;
     }
 });
 const play_blade = pane.addBinding(monitor, "transport_play", { label: "Play" });
@@ -434,54 +271,24 @@ const play_blade = pane.addBinding(monitor, "transport_play", { label: "Play" })
 play_blade.on("change", async (ev) => {
     if (!ev.value) {
         // transport.pause();
-        music1.pause();
+        music.pause();
     } else {
         if (Tone.getContext().state === "suspended") {
             await Tone.start();
         }
         await Tone.loaded();
-        // transport.start();
-        await music1.play();
+        await music.play();
     }
 });
 
-//TODO : Remove composer if not needed.
-// const composer = new EffectComposer(renderer);
-// const render_pass = new RenderPass(scene, camera);
-// composer.addPass(render_pass);
-// const canvas = renderer.domElement;
-// const outline_pass = new OutlinePass(
-//     new THREE.Vector2(canvas.clientWidth, canvas.clientHeight),
-//     scene,
-//     camera
-// );
-// composer.addPass(outline_pass);
-// outline_pass.selectedObjects = [outlined_mesh];
-// //ball0.material.transparent = true;
-// //ball0.material.opacity = 0;
-// // composer.setPixelRatio(window.devicePixelRatio);
-// const output_pass = new OutputPass();
-// composer.addPass(output_pass);
-transport.start();
 function render(t: number) {
     fpsGraph.begin();
     const time = t * 0.001; // convert time to seconds
-    // const audio_time = transport.seconds;
-    const audio_time = music1.currentTime;
-    // const audio_time = time;
-    // const audio_time = context.currentTime / 2;
+    const audio_time = music.currentTime;
     monitor.video_time = time;
     monitor.audio_time = audio_time;
-    // monitor.audio_time = music1.currentTime;
-    // console.log(
-    //     `${music1.currentTime} ${context.currentTime} ${music1.currentTime - context.currentTime}`
-    // );
-    // console.log(`Without look ahead : ${transport.immediate()}`);
-    // console.log(`With look ahead : ${transport.now()}`);
-    // console.log(`Look ahead : ${transport.context.lookAhead}`);
 
     resizeRendererToDisplaySize(renderer, camera);
-    // resizeRendererComposerToDisplaySize(renderer, composer, camera);
 
     simulator.balls.forEach((ball) => {
         ball.render(audio_time);
@@ -506,13 +313,113 @@ function render(t: number) {
     listener.upZ.value = camera_up.z;
 
     renderer.render(scene, camera);
-    // composer.render();
 
     fpsGraph.end();
     requestAnimationFrame(render);
 }
 
+simulator.jugglers.forEach((juggler) => {
+    scene.add(juggler.mesh);
+});
 simulator.balls = simulator.balls.filter((ball) => {
     return ball.timeline.length !== 0;
 });
+simulator.balls.forEach((ball) => {
+    scene.add(ball.mesh);
+});
+
+//TODO : Merge geometries ?
+{
+    //Chest
+    let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
+        0.6 * Math.SQRT1_2,
+        0.4 * Math.SQRT1_2,
+        1,
+        4,
+        1
+    );
+    chest_geometry.rotateY(Math.PI / 4);
+    chest_geometry = chest_geometry.toNonIndexed();
+    chest_geometry.computeVertexNormals();
+    chest_geometry.scale(0.5, 1, 1);
+    const chest_material = new THREE.MeshPhongMaterial({ color: "green" });
+    const chest = new THREE.Mesh(chest_geometry, chest_material);
+    chest.position.set(0, 1.7, 0);
+    scene.add(chest);
+
+    //Head
+    const head_geometry = new THREE.SphereGeometry(0.2);
+    head_geometry.scale(0.8, 1, 0.8);
+    const head = new THREE.Mesh(head_geometry, chest_material);
+    head.position.set(0, 0.75, 0);
+    chest.add(head);
+
+    //Shoulders
+    const shoulder_material = new THREE.MeshPhongMaterial({ color: "red" });
+    const shoulder_geometry = new THREE.SphereGeometry(0.08);
+    const right_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
+    right_shoulder.position.set(0, 0.5, 0.3);
+    //right_shoulder.material.visible = false;
+    right_shoulder.rotateZ(-Math.PI / 2);
+    right_shoulder.rotateY(-0.2);
+    chest.add(right_shoulder);
+    const left_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
+    left_shoulder.position.set(0, 0.5, -0.3);
+    left_shoulder.rotateZ(-Math.PI / 2);
+    left_shoulder.rotateY(0.2);
+    chest.add(left_shoulder);
+
+    //Arms
+    const arm_length = 0.55;
+    const arm_material = new THREE.MeshPhongMaterial({ color: "white" });
+    const arm_geometry = new THREE.BoxGeometry(arm_length, 0.05, 0.05);
+    // const arm_geometry = new THREE.CylinderGeometry(0.03, 0.03, arm_length);
+    // arm_geometry.rotateZ(Math.PI / 2);
+    const right_arm = new THREE.Mesh(arm_geometry, arm_material);
+    right_arm.position.set(arm_length / 2, 0, 0);
+    right_shoulder.add(right_arm);
+    const left_arm = new THREE.Mesh(arm_geometry, arm_material);
+    left_arm.position.set(arm_length / 2, 0, 0);
+    left_shoulder.add(left_arm);
+
+    //Elbows
+    const elbow_geometry = new THREE.SphereGeometry(0.05);
+    const right_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
+    right_elbow.position.set(arm_length / 2, 0, 0);
+    right_elbow.rotateZ(Math.PI / 2);
+    right_arm.add(right_elbow);
+    const left_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
+    left_elbow.position.set(arm_length / 2, 0, 0);
+    left_elbow.rotateZ(Math.PI / 2);
+    left_arm.add(left_elbow);
+
+    //Forearms
+    const right_forearm = new THREE.Mesh(arm_geometry, arm_material);
+    right_forearm.position.set(arm_length / 2, 0, 0);
+    right_elbow.add(right_forearm);
+    const left_forearm = new THREE.Mesh(arm_geometry, arm_material);
+    left_forearm.position.set(arm_length / 2, 0, 0);
+    left_elbow.add(left_forearm);
+
+    //Hands
+    const hand_geometry = new THREE.SphereGeometry(0.05);
+    hand_geometry.scale(1, 0.8, 0.8);
+    const hand_material = new THREE.MeshPhongMaterial({ color: "black" });
+    const right_hand = new THREE.Mesh(hand_geometry, hand_material);
+    right_hand.position.set(arm_length / 2, 0, 0);
+    right_forearm.add(right_hand);
+    const left_hand = new THREE.Mesh(hand_geometry, hand_material);
+    left_hand.position.set(arm_length / 2, 0, 0);
+    left_forearm.add(left_hand);
+
+    //Legs
+    const leg_geometry = new THREE.BoxGeometry(0.15, 1.2, 0.1);
+    const right_leg = new THREE.Mesh(leg_geometry, chest_material);
+    right_leg.position.set(0, -1.1, 0.15);
+    chest.add(right_leg);
+    const left_leg = new THREE.Mesh(leg_geometry, chest_material);
+    left_leg.position.set(0, -1.1, -0.15);
+    chest.add(left_leg);
+}
+
 requestAnimationFrame(render);
