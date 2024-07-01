@@ -156,6 +156,25 @@ function lance(
     target.timeline = target.timeline.insert(ev2.time, ev2);
 }
 
+// Petite Fleur
+// const left = vincent.left_hand;
+// const right = vincent.right_hand;
+// const u = 1 / 265;
+// const d = u / 2;
+// const first_catch = 5.712;
+// const pattern = "5 0 0 3^4 ((441)^3 3^7)^3 441 441 4010 0 0";
+// for (let i = 0; i < 100; i++) {
+//     lance(
+//         simulator.balls[i % 3],
+//         1 + i * u,
+//         3 * u - d,
+//         vincent.hands[i % 2],
+//         vincent.hands[(i + 1) % 2],
+//         u,
+//         ["normal_hit1", "normal_hit2"]
+//     );
+// }
+
 //////////////////////////////////////////////////////////////////////////////
 // Edit here
 //////////////////////////////////////////////////////////////////////////////
@@ -291,7 +310,9 @@ function render(t: number) {
 
     simulator.balls.forEach((ball) => {
         ball.render(audio_time);
-        ball.play_on_catch(audio_time);
+        if (!music.paused) {
+            ball.play_on_catch(audio_time);
+        }
     });
     simulator.jugglers.forEach((juggler) => {
         juggler.render(audio_time);
