@@ -180,15 +180,15 @@ function lance(
 // Edit here
 //////////////////////////////////////////////////////////////////////////////
 function conv_siteswap_to_pattern(siteswap: string): number[][] {
-    const pattern: number[][] = [[]];
+    const pattern: number[][] = [[], []];
     if (!siteswap.includes("(")) {
         for (let i = 0; i < siteswap.length; i++) {
-            pattern[0][i] = parseInt(siteswap.substring(i, i + 1));
+            pattern[i % 2][i] = parseInt(siteswap.substring(i, i + 1));
         }
     } else {
         let c = 0;
         //for (let i = 0; i != -1; i = siteswap.indexOf(")", i))
-        pattern.push([]);
+
         while (c < siteswap.length) {
             if (siteswap.includes("(", c)) {
                 const synchro = siteswap.substring(
@@ -196,8 +196,8 @@ function conv_siteswap_to_pattern(siteswap: string): number[][] {
                     siteswap.indexOf(")", c)
                 );
                 for (let i = 0; i < synchro.length; i++) {
-                    pattern[i % 2][pattern[i % 2].length] = parseInt(synchro.substring(i, i + 1));
-                    pattern[i % 2][pattern[i % 2].length] = 0;
+                    pattern[i % 2][pattern[i % 2].length] = parseInt(synchro.substring(i, i + 1)); //We add to the last box the throw
+                    pattern[i % 2][pattern[i % 2].length] = 0; //We add zero to the last box
                 }
                 c = siteswap.indexOf(")", c) + 1;
             } else {
@@ -237,67 +237,70 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
         console.log(pier);
     }
     function thrown_from_0(
-        is_Parallel: boolean,
         held_balls: Ball[] | undefined[],
-        held_balls_hand: Ball[][] | undefined[][],
+        held_balls_hand: Ball[][][] | undefined[][],
         i: number
     ): void {
-        if (is_Parallel) {
-            if (held_balls_hand[i % 2][~~(i / pattern.length)] == undefined) {
-                held_balls_hand[i % 2].splice(~~(i / pattern.length), 1, 0);
-            } else {
-                held_balls_hand[i % 2].splice(~~(i / pattern.length), 0, 0);
+        if (held_balls_hand[i % 2][~~(i / pattern.length)] != undefined) {
+            for (let i2 = 0; i2 < held_balls_hand[i % 2][~~(i / pattern.length)].length; i2++) {
+                let new_position: number;
+                if (held_balls_hand[i2 % 2][~~(i / pattern.length) + 1] != undefined) {
+                    new_position = held_balls_hand[i2 % 2][~~(i / pattern.length) + 1].length;
+                } else {
+                    new_position = 0;
+                    held_balls_hand[i2 % 2][~~(i / pattern.length) + 1] = [];
+                }
+                held_balls_hand[i2 % 2][~~(i / pattern.length) + 1][new_position] =
+                    held_balls_hand[i2 % 2][~~(i / pattern.length)][i2];
             }
         }
-        if (held_balls[i] == undefined) {
-            held_balls.splice(i, 1, 0);
-        } else {
-            held_balls.splice(i, 0, 0);
+        if (held_balls[i] != undefined) {
+            held_balls.splice(i, 0, undefined);
         }
     }
-    function copyValueBalls(
-        held_balls: Ball[] | undefined[],
-        held_balls_hand: Ball[][] | undefined[][],
+    function copyBalls(
+        ball: Ball,
+        held_balls_hand: Ball[][][] | undefined[][],
         i: number,
         length: number
     ): void {
-        held_balls_hand[i % 2][~~(i / length)] = held_balls[i];
+        const table: Ball[] = [];
+        held_balls_hand[i % 2][~~(i / length)] = table;
+        held_balls_hand[i % 2][~~(i / length)][0] = ball;
     }
-    function deleteEmptyBox(
-        table: Ball[] | undefined[],
-        tableP: Ball[][] | undefined[][],
-        i: number,
-        length = 0
-    ) {
-        if (length) {
-            tableP[i % 2][~~(i / length)] = tableP[i % 2][~~(i / length) + 1];
-            tableP[i % 2][~~(i / length) + 1] = undefined;
-        } else {
-            table[i] = table[i + 1];
-            table[i + 1] = undefined;
-        }
-    }
+    // function deleteEmptyBox(
+    //     table: Ball[] | undefined[],
+    //     tableP: Ball[][] | undefined[][],
+    //     i: number,
+    //     length = 0
+    // ) {
+    //     if (length) {
+    //         tableP[i % 2][~~(i / length)] = tableP[i % 2][~~(i / length) + 1];
+    //         tableP[i % 2][~~(i / length) + 1] = undefined;
+    //     } else {
+    //         table[i] = table[i + 1];
+    //         table[i + 1] = undefined;
+    //     }
+    // }
 
     // Count the balls needed and check if it is_Parallel
     let n_balls = 0;
-    let p = 0;
-    let is_Parallel;
     for (const subArray of pattern) {
         n_balls += subArray.reduce((p, c) => p + c, 0) / subArray.length;
-        is_Parallel = p;
-        p++;
     }
 
     // Build the balls
     for (let i = 0; i < Math.round(n_balls); i++) {
         simulator.balls[i] = new Ball(colors[i], 0.04);
     }
+
     //pre_lancer(pattern);
+
     // Build the sequence of throws
     const total_size = pattern.reduce((total, subArray) => total + subArray.length, 0);
     const N = total_size * 50;
-    const held_balls: Ball[] | undefined[] = Array(N);
-    const held_balls_hand: Ball[][] | undefined[][] = [[], []];
+    const held_balls: Ball[] | undefined[] = Array(N); // TODO replace to juste balls to take.
+    const held_balls_hand: Ball[][][] | undefined[][] = [[], []];
     for (let i = 0; i < simulator.balls.length; i++) {
         held_balls[i] = simulator.balls[i];
     }
@@ -306,29 +309,47 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
         const h =
             pattern[i % pattern.length][
                 ~~(i / pattern.length) % pattern[i % pattern.length].length
-            ];
+            ]; //[select each table one by one][select each i frome 0 to pattern[subarray].length, this for each subarray]
         if (h === 0) {
-            thrown_from_0(Boolean(is_Parallel), held_balls, held_balls_hand, i);
+            thrown_from_0(held_balls, held_balls_hand, i);
         } else {
-            if (is_Parallel) {
-                if (held_balls_hand[i % 2][~~(i / pattern.length)] == undefined) {
-                    if (held_balls[i] != undefined) {
-                        copyValueBalls(held_balls, held_balls_hand, i, pattern.length);
-                    } else {
-                        deleteEmptyBox([], held_balls_hand, i, pattern.length);
-                        //held_balls_hand[i % 2].splice(~~(i / pattern.length), 1);
-                    }
+            if (held_balls_hand[i % 2][~~(i / pattern.length)] == undefined) {
+                if (held_balls[i] != undefined) {
+                    copyBalls(held_balls[i], held_balls_hand, i, pattern.length);
+                } else {
+                    console.log(
+                        "held_balls_hand[",
+                        i % 2,
+                        "][",
+                        ~~(i / pattern.length),
+                        "] et held_balls[",
+                        i,
+                        "] sont undefined."
+                    );
+                    //     deleteEmptyBox([], held_balls_hand, i, pattern.length);
+                    //     //held_balls_hand[i % 2].splice(~~(i / pattern.length), 1);
                 }
-                //Name for function held_balls[i] = function()
-                held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] =
-                    held_balls_hand[i % 2][~~(i / pattern.length)];
-                held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)];
-            } else {
-                if (held_balls[i] == undefined) {
-                    deleteEmptyBox(held_balls, [], i);
+            }
+            //Name for function held_balls[i] = function()
+            if (held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] == undefined) {
+                held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] = [];
+            }
+            held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h][
+                held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h].length
+            ] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
+            held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
+            if (held_balls_hand[i % 2][~~(i / pattern.length)].length > 1) {
+                if (held_balls_hand[i % 2][~~(i / pattern.length) + 1] != undefined) {
+                    held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
+                        ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1),
+                        ...held_balls_hand[i % 2][~~(i / pattern.length) + 1]
+                    ];
+                } else {
+                    held_balls_hand[i % 2][~~(i / pattern.length) + 1]?.push([]);
+                    held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
+                        ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1)
+                    ];
                 }
-                held_balls[i + h] = held_balls[i];
-                //console.log(held_balls);
             }
 
             lance(
@@ -341,11 +362,8 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
             );
         }
     }
-    if (is_Parallel) {
-        console.log(held_balls_hand);
-    } else {
-        console.log(held_balls);
-    }
+
+    console.log(held_balls_hand);
 }
 
 // Configuration
