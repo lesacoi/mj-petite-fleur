@@ -23,6 +23,29 @@ Simply fork this repository, and then use :
 pnpm install
 ```
 
+ADDITIONAL STEP : 
+Go to node_modules/antlr4/package.json and modify the following (as found in [this issue](https://github.com/antlr/antlr4/issues/4218#issuecomment-1973086978)):
+
+```JSON
+"exports": {
+    ".": {
+++    "types": "./src/antlr4/index.d.ts",
+      "node": {
+--      "types": "./src/antlr4/index.d.ts",
+        "import": "./dist/antlr4.node.mjs",
+        "require": "./dist/antlr4.node.cjs",
+        "default": "./dist/antlr4.node.mjs"
+      },
+      "browser": {
+--      "types": "./src/antlr4/index.d.ts",
+        "import": "./dist/antlr4.web.mjs",
+        "require": "./dist/antlr4.web.cjs",
+        "default": "./dist/antlr4.web.mjs"
+      }
+    }
+  }
+```
+
 And _voilà_, all dependencies have been installed.
 
 Command shortcuts (specified in `package.json`) are available to start the project locally :
@@ -42,6 +65,12 @@ pnpm build
 -   It is strongly advised to install the ESLint and Prettier extensions.
 -   We use the so-called flat layout to configure ESLint's rules, which are not active by default in VSCode's ESLint extension. The `eslint.experimental.useFlatConfig` flag should be set to true.
 -   We strongly advise to enable the `editor.formatOnSave` flag to automatically format a document on save.
+
+## To modify the siteswap parser.
+
+The siteswap parser uses ANTLR to generate parsers in many languages (namely Typescript in our case, but also python), but also as a runtime package to parse expressions for that grammar.
+
+To install ANTLR : 
 
 ## TODO
 

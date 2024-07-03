@@ -46,7 +46,7 @@ class Juggler {
         //this.material = new THREE.LineBasicMaterial({ color: "black", linewidth: 2 });
         basic_geometry.translate(0, height / 2, 0);
         this.geometry = basic_geometry;
-        this.material = new THREE.MeshPhongMaterial({ color: "yellow", wireframe: true });
+        this.material = new THREE.MeshPhongMaterial({ color: "yellow", wireframe: false });
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         //this.wireframe = new THREE.LineSegments(this.geometry, this.material);
         //this.mesh.translateY(height / 2);

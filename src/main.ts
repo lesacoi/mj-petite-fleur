@@ -15,6 +15,11 @@ import * as Tone from "tone";
 //TODO : Camlecase or underscores ?
 //TODO Bugged buffer load if not await in main code.
 
+import { lexer } from "./parser/parser";
+const inputText = "5 0 0 3^4 ((441)^3 3^7)^3 441 441 4010 0 0";
+const lexingResult = lexer.tokenize(inputText);
+console.log(lexingResult);
+
 const transport = Tone.getTransport();
 // const transport = new TransportPlayback();
 const context = Tone.getContext();
@@ -92,12 +97,17 @@ const sfx_buffers = {
     weak_hit_shaker: new Tone.ToneAudioBuffer("grelot_balls_sfx/weak_hit_shaker.mp3")
 };
 
+const weak_hit = ["weak_hit1", "weak_hit2"];
+const normal_hit = ["normal_hit1", "normal_hit2"];
+const heavy_hit = ["heavy_hit1", "heavy_hit2", "heavy_hit3"];
+
 const music = new Audio("petite_fleur_vincent.mp3");
 const music_tone = context.createMediaElementSource(music);
 const music_gain = new Tone.Gain().toDestination();
 Tone.connect(music_tone, music_gain);
 const sfx_gain = new Tone.Gain().toDestination();
-sfx_gain.gain.value = 0;
+// sfx_gain.gain.value = 0;
+music_gain.gain.value = 0;
 
 // await Tone.loaded();
 // await Tone.start();
@@ -125,8 +135,8 @@ const camera = simulator.camera;
 
 simulator.jugglers = [new Juggler(2.0)];
 const vincent = simulator.jugglers[0];
-vincent.mesh.position.set(-1, 0, 1);
-vincent.mesh.rotateY(Math.PI / 2);
+// vincent.mesh.position.set(-1, 0, 1);
+// vincent.mesh.rotateY(Math.PI / 2);
 
 //TODO : Handle properly this await (by loading the sounds for the balls only when Tone has loaded the buffer.)
 await Tone.loaded();
@@ -157,12 +167,34 @@ function lance(
 }
 
 // Petite Fleur
-// const left = vincent.left_hand;
-// const right = vincent.right_hand;
-// const u = 1 / 265;
-// const d = u / 2;
-// const first_catch = 5.712;
-// const pattern = "5 0 0 3^4 ((441)^3 3^7)^3 441 441 4010 0 0";
+const left = vincent.left_hand;
+const right = vincent.right_hand;
+let ball0 = simulator.balls[0];
+let ball1 = simulator.balls[1];
+let ball2 = simulator.balls[2];
+const u = 60 / 265;
+const d = u / 3;
+// const t = 56.153;
+
+let t = 0;
+for (let i = 0; i < 10; i++) {
+    lance(ball0, t + 0 * u, 3.5 * u - d, left, left, u, heavy_hit);
+    lance(ball1, t + 1 * u, 4 * u - d, right, left, u, heavy_hit);
+    lance(ball2, t + 2 * u, 1 * u - d, left, right, u, heavy_hit);
+    lance(ball2, t + 3 * u, 3 * u - d, right, left, u, normal_hit);
+    lance(ball0, t + 3.5 * u, 0.5 * u - d, left, right, u, heavy_hit);
+    // lance(ball0, t + 4 * u, 1.5 * u - d, right, right, u);
+    lance(ball1, t + 5 * u, 2 * u - d, left, right, u, normal_hit);
+    lance(ball0, t + 5.5 * u, 3.5 * u - d, right, right, u, normal_hit);
+    lance(ball2, t + 6 * u, 4 * u - d, left, left, u, normal_hit);
+    lance(ball1, t + 7 * u, 1 * u - d, right, left, u, heavy_hit);
+    const tmp = ball0;
+    ball0 = ball1;
+    ball1 = tmp;
+    ball2 = ball2;
+    t = t + 8 * u;
+}
+
 // for (let i = 0; i < 100; i++) {
 //     lance(
 //         simulator.balls[i % 3],
@@ -211,19 +243,19 @@ function lance(
 // End edit here
 //////////////////////////////////////////////////////////////////////////////
 
-const u = 0.25;
-const d = u / 2;
-for (let i = 0; i < 100; i++) {
-    lance(
-        simulator.balls[i % 3],
-        1 + i * u,
-        3 * u - d,
-        vincent.hands[i % 2],
-        vincent.hands[(i + 1) % 2],
-        u,
-        ["normal_hit1", "normal_hit2"]
-    );
-}
+// const u = 0.25;
+// const d = u / 2;
+// for (let i = 0; i < 100; i++) {
+//     lance(
+//         simulator.balls[i % 3],
+//         1 + i * u,
+//         3 * u - d,
+//         vincent.hands[i % 2],
+//         vincent.hands[(i + 1) % 2],
+//         u,
+//         ["normal_hit1", "normal_hit2"]
+//     );
+// }
 
 // lance(ball1, 1 + 1*u, 3 * u - d, left_hand, right_hand, u);
 // lance(ball2, 1 + 2*u, 3 * u - d, right_hand, left_hand, u);
@@ -349,97 +381,97 @@ simulator.balls.forEach((ball) => {
 });
 
 //TODO : Merge geometries ?
-{
-    //Chest
-    let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
-        0.6 * Math.SQRT1_2,
-        0.4 * Math.SQRT1_2,
-        1,
-        4,
-        1
-    );
-    chest_geometry.rotateY(Math.PI / 4);
-    chest_geometry = chest_geometry.toNonIndexed();
-    chest_geometry.computeVertexNormals();
-    chest_geometry.scale(0.5, 1, 1);
-    const chest_material = new THREE.MeshPhongMaterial({ color: "green" });
-    const chest = new THREE.Mesh(chest_geometry, chest_material);
-    chest.position.set(0, 1.7, 0);
-    scene.add(chest);
+// {
+//     //Chest
+//     let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
+//         0.6 * Math.SQRT1_2,
+//         0.4 * Math.SQRT1_2,
+//         1,
+//         4,
+//         1
+//     );
+//     chest_geometry.rotateY(Math.PI / 4);
+//     chest_geometry = chest_geometry.toNonIndexed();
+//     chest_geometry.computeVertexNormals();
+//     chest_geometry.scale(0.5, 1, 1);
+//     const chest_material = new THREE.MeshPhongMaterial({ color: "green" });
+//     const chest = new THREE.Mesh(chest_geometry, chest_material);
+//     chest.position.set(0, 1.7, 0);
+//     scene.add(chest);
 
-    //Head
-    const head_geometry = new THREE.SphereGeometry(0.2);
-    head_geometry.scale(0.8, 1, 0.8);
-    const head = new THREE.Mesh(head_geometry, chest_material);
-    head.position.set(0, 0.75, 0);
-    chest.add(head);
+//     //Head
+//     const head_geometry = new THREE.SphereGeometry(0.2);
+//     head_geometry.scale(0.8, 1, 0.8);
+//     const head = new THREE.Mesh(head_geometry, chest_material);
+//     head.position.set(0, 0.75, 0);
+//     chest.add(head);
 
-    //Shoulders
-    const shoulder_material = new THREE.MeshPhongMaterial({ color: "red" });
-    const shoulder_geometry = new THREE.SphereGeometry(0.08);
-    const right_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
-    right_shoulder.position.set(0, 0.5, 0.3);
-    //right_shoulder.material.visible = false;
-    right_shoulder.rotateZ(-Math.PI / 2);
-    right_shoulder.rotateY(-0.2);
-    chest.add(right_shoulder);
-    const left_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
-    left_shoulder.position.set(0, 0.5, -0.3);
-    left_shoulder.rotateZ(-Math.PI / 2);
-    left_shoulder.rotateY(0.2);
-    chest.add(left_shoulder);
+//     //Shoulders
+//     const shoulder_material = new THREE.MeshPhongMaterial({ color: "red" });
+//     const shoulder_geometry = new THREE.SphereGeometry(0.08);
+//     const right_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
+//     right_shoulder.position.set(0, 0.5, 0.3);
+//     //right_shoulder.material.visible = false;
+//     right_shoulder.rotateZ(-Math.PI / 2);
+//     right_shoulder.rotateY(-0.2);
+//     chest.add(right_shoulder);
+//     const left_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
+//     left_shoulder.position.set(0, 0.5, -0.3);
+//     left_shoulder.rotateZ(-Math.PI / 2);
+//     left_shoulder.rotateY(0.2);
+//     chest.add(left_shoulder);
 
-    //Arms
-    const arm_length = 0.55;
-    const arm_material = new THREE.MeshPhongMaterial({ color: "white" });
-    const arm_geometry = new THREE.BoxGeometry(arm_length, 0.05, 0.05);
-    // const arm_geometry = new THREE.CylinderGeometry(0.03, 0.03, arm_length);
-    // arm_geometry.rotateZ(Math.PI / 2);
-    const right_arm = new THREE.Mesh(arm_geometry, arm_material);
-    right_arm.position.set(arm_length / 2, 0, 0);
-    right_shoulder.add(right_arm);
-    const left_arm = new THREE.Mesh(arm_geometry, arm_material);
-    left_arm.position.set(arm_length / 2, 0, 0);
-    left_shoulder.add(left_arm);
+//     //Arms
+//     const arm_length = 0.55;
+//     const arm_material = new THREE.MeshPhongMaterial({ color: "white" });
+//     const arm_geometry = new THREE.BoxGeometry(arm_length, 0.05, 0.05);
+//     // const arm_geometry = new THREE.CylinderGeometry(0.03, 0.03, arm_length);
+//     // arm_geometry.rotateZ(Math.PI / 2);
+//     const right_arm = new THREE.Mesh(arm_geometry, arm_material);
+//     right_arm.position.set(arm_length / 2, 0, 0);
+//     right_shoulder.add(right_arm);
+//     const left_arm = new THREE.Mesh(arm_geometry, arm_material);
+//     left_arm.position.set(arm_length / 2, 0, 0);
+//     left_shoulder.add(left_arm);
 
-    //Elbows
-    const elbow_geometry = new THREE.SphereGeometry(0.05);
-    const right_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
-    right_elbow.position.set(arm_length / 2, 0, 0);
-    right_elbow.rotateZ(Math.PI / 2);
-    right_arm.add(right_elbow);
-    const left_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
-    left_elbow.position.set(arm_length / 2, 0, 0);
-    left_elbow.rotateZ(Math.PI / 2);
-    left_arm.add(left_elbow);
+//     //Elbows
+//     const elbow_geometry = new THREE.SphereGeometry(0.05);
+//     const right_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
+//     right_elbow.position.set(arm_length / 2, 0, 0);
+//     right_elbow.rotateZ(Math.PI / 2);
+//     right_arm.add(right_elbow);
+//     const left_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
+//     left_elbow.position.set(arm_length / 2, 0, 0);
+//     left_elbow.rotateZ(Math.PI / 2);
+//     left_arm.add(left_elbow);
 
-    //Forearms
-    const right_forearm = new THREE.Mesh(arm_geometry, arm_material);
-    right_forearm.position.set(arm_length / 2, 0, 0);
-    right_elbow.add(right_forearm);
-    const left_forearm = new THREE.Mesh(arm_geometry, arm_material);
-    left_forearm.position.set(arm_length / 2, 0, 0);
-    left_elbow.add(left_forearm);
+//     //Forearms
+//     const right_forearm = new THREE.Mesh(arm_geometry, arm_material);
+//     right_forearm.position.set(arm_length / 2, 0, 0);
+//     right_elbow.add(right_forearm);
+//     const left_forearm = new THREE.Mesh(arm_geometry, arm_material);
+//     left_forearm.position.set(arm_length / 2, 0, 0);
+//     left_elbow.add(left_forearm);
 
-    //Hands
-    const hand_geometry = new THREE.SphereGeometry(0.05);
-    hand_geometry.scale(1, 0.8, 0.8);
-    const hand_material = new THREE.MeshPhongMaterial({ color: "black" });
-    const right_hand = new THREE.Mesh(hand_geometry, hand_material);
-    right_hand.position.set(arm_length / 2, 0, 0);
-    right_forearm.add(right_hand);
-    const left_hand = new THREE.Mesh(hand_geometry, hand_material);
-    left_hand.position.set(arm_length / 2, 0, 0);
-    left_forearm.add(left_hand);
+//     //Hands
+//     const hand_geometry = new THREE.SphereGeometry(0.05);
+//     hand_geometry.scale(1, 0.8, 0.8);
+//     const hand_material = new THREE.MeshPhongMaterial({ color: "black" });
+//     const right_hand = new THREE.Mesh(hand_geometry, hand_material);
+//     right_hand.position.set(arm_length / 2, 0, 0);
+//     right_forearm.add(right_hand);
+//     const left_hand = new THREE.Mesh(hand_geometry, hand_material);
+//     left_hand.position.set(arm_length / 2, 0, 0);
+//     left_forearm.add(left_hand);
 
-    //Legs
-    const leg_geometry = new THREE.BoxGeometry(0.15, 1.2, 0.1);
-    const right_leg = new THREE.Mesh(leg_geometry, chest_material);
-    right_leg.position.set(0, -1.1, 0.15);
-    chest.add(right_leg);
-    const left_leg = new THREE.Mesh(leg_geometry, chest_material);
-    left_leg.position.set(0, -1.1, -0.15);
-    chest.add(left_leg);
-}
+//     //Legs
+//     const leg_geometry = new THREE.BoxGeometry(0.15, 1.2, 0.1);
+//     const right_leg = new THREE.Mesh(leg_geometry, chest_material);
+//     right_leg.position.set(0, -1.1, 0.15);
+//     chest.add(right_leg);
+//     const left_leg = new THREE.Mesh(leg_geometry, chest_material);
+//     left_leg.position.set(0, -1.1, -0.15);
+//     chest.add(left_leg);
+// }
 
 requestAnimationFrame(render);
