@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import * as THREE from "three";
 import { resizeRendererToDisplaySize, Simulator } from "./Simulator";
 import { Ball } from "./Ball";
@@ -7,7 +8,6 @@ import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 import { JugglingEvent } from "./Timeline";
 import { Hand } from "./Hand";
 import * as Tone from "tone";
-//import { func } from "three/examples/jsm/nodes/Nodes.js";
 
 //TODO : With react, handle volume button being pressed as interaction ?
 //TODO : Test on phone if touch correctly starts audio
@@ -126,8 +126,8 @@ const camera = simulator.camera;
 
 simulator.jugglers = [new Juggler(2.0)];
 const vincent = simulator.jugglers[0];
-vincent.mesh.position.set(-1, 0, 1);
-vincent.mesh.rotateY(Math.PI / 2);
+// vincent.mesh.position.set(-1, 0, 1);
+// vincent.mesh.rotateY(Math.PI / 2);
 
 //TODO : Handle properly this await (by loading the sounds for the balls only when Tone has loaded the buffer.)
 await Tone.loaded();
@@ -182,8 +182,12 @@ function lance(
 function conv_siteswap_to_pattern(siteswap: string): number[][] {
     const pattern: number[][] = [[], []];
     if (!siteswap.includes("(")) {
+        if (siteswap.length % 2 == 1) {
+            siteswap = siteswap + siteswap;
+        }
         for (let i = 0; i < siteswap.length; i++) {
             pattern[i % 2][i] = parseInt(siteswap.substring(i, i + 1));
+            pattern[(i + 1) % 2][i] = 0;
         }
     } else {
         let c = 0;
@@ -205,42 +209,69 @@ function conv_siteswap_to_pattern(siteswap: string): number[][] {
             }
         }
     }
+    //console.log(pattern);
     return pattern;
 }
 
 function lance_pattern(pattern: number[][], colors: string[], u: number, d: number): void {
-    function pre_lancer(pattern: number[][]): void {
+    function pre_lancer(pattern: number[][], size: number, held_balls: Ball[]): void {
         /// May be convert to boolean to handle errors
-        const thrown_max = Math.max(...pattern[0]);
-        console.log(thrown_max);
-        function known_all_positions(pier: number[]): boolean {
-            for (let i = 0; i < thrown_max; i++) {
-                console.log(pier[i]);
-                if (pier[i] != 0 || pier[i] != 1) {
-                    console.log(false);
-                    return false;
+        const thrown_max = Math.max(...pattern.flat());
+        function known_all_positions(pier: number[][]): boolean {
+            for (let i = 0; i < thrown_max - 1; i++) {
+                for (const subArray of pier) {
+                    if (!(subArray[i] == 0 || subArray[i] == 1)) {
+                        return false;
+                    }
                 }
             }
             return true;
         }
-        const pier: number[] = [];
+        //const pier: number[][] = [];
+        const pier: number[][] = Array.from(pattern, () => Array(thrown_max));
+        // for (const item of pattern) {
+        //     pier.push([]); // Ajoutez un nouveau sous-tableau vide
+        //}
         while (!known_all_positions(pier)) {
-            for (let i = 0; i < pattern[0].length; i++) {
-                if (pattern[0][i] != 0) {
-                    pier[pattern[0][i] - 1] = 1;
+            for (let i = 0; i < size; i++) {
+                if (i % pattern.length == 0) {
+                    for (let i2 = 0; i2 < pattern.length; i2++) {
+                        pier[i2].splice(0, 1);
+                        pier[i2][thrown_max - 1] = 0;
+                    }
                 }
-                pier.splice(0, 1);
-                pier[thrown_max - 1] = 0;
-                console.log(pier);
+                if (pattern[i % pattern.length][~~(i / pattern.length)] != 0) {
+                    pier[
+                        ((i % pattern.length) +
+                            pattern[i % pattern.length][~~(i / pattern.length)]) %
+                            2
+                    ][pattern[i % pattern.length][~~(i / pattern.length)] - 1] = 1;
+                }
             }
         }
-        console.log(pier);
+        // Execute pier in time -u
+        const spattern: number[][] = [[], []]; // All pier execute at time -u with hand i (spattern[i])
+        const totale_size = pier.reduce((total, subArray) => total + subArray.length, 0);
+
+        // Make spattern and execute it
+        for (let i = 0; i < totale_size; i++) {
+            if (pier[i % pier.length][~~(i / pier.length)] == 1) {
+                const last_spattern_position = spattern.flat().length;
+                spattern[i % pier.length][last_spattern_position] = ~~(i / pier.length) + 1;
+                copyBalls(held_balls[last_spattern_position], held_balls_hand, i, pier.length);
+                lance(
+                    held_balls[last_spattern_position],
+                    -u,
+                    u * (~~(i / pier.length) + 1) - d,
+                    vincent.hands[i % 2],
+                    vincent.hands[i % 2],
+                    u
+                );
+            }
+        }
+        //console.log(spattern);
     }
-    function thrown_from_0(
-        held_balls: Ball[] | undefined[],
-        held_balls_hand: Ball[][][] | undefined[][],
-        i: number
-    ): void {
+    function thrown_from_0(held_balls: Ball[], held_balls_hand: Ball[][][], i: number): void {
         if (held_balls_hand[i % 2][~~(i / pattern.length)] != undefined) {
             for (let i2 = 0; i2 < held_balls_hand[i % 2][~~(i / pattern.length)].length; i2++) {
                 let new_position: number;
@@ -254,34 +285,17 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
                     held_balls_hand[i2 % 2][~~(i / pattern.length)][i2];
             }
         }
-        if (held_balls[i] != undefined) {
-            held_balls.splice(i, 0, undefined);
-        }
+        //Normalement inutile
+        // if (held_balls[i] != undefined) {
+        //     held_balls.splice(i, 0, undefined);
+        //     //console.log(held_balls, i);
+        // }
     }
-    function copyBalls(
-        ball: Ball,
-        held_balls_hand: Ball[][][] | undefined[][],
-        i: number,
-        length: number
-    ): void {
+    function copyBalls(ball: Ball, held_balls_hand: Ball[][][], i: number, length: number): void {
         const table: Ball[] = [];
         held_balls_hand[i % 2][~~(i / length)] = table;
         held_balls_hand[i % 2][~~(i / length)][0] = ball;
     }
-    // function deleteEmptyBox(
-    //     table: Ball[] | undefined[],
-    //     tableP: Ball[][] | undefined[][],
-    //     i: number,
-    //     length = 0
-    // ) {
-    //     if (length) {
-    //         tableP[i % 2][~~(i / length)] = tableP[i % 2][~~(i / length) + 1];
-    //         tableP[i % 2][~~(i / length) + 1] = undefined;
-    //     } else {
-    //         table[i] = table[i + 1];
-    //         table[i + 1] = undefined;
-    //     }
-    // }
 
     // Count the balls needed and check if it is_Parallel
     let n_balls = 0;
@@ -294,80 +308,96 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
         simulator.balls[i] = new Ball(colors[i], 0.04);
     }
 
-    //pre_lancer(pattern);
+    // Add balls to scene
+    simulator.balls.forEach((ball) => {
+        scene.add(ball.mesh);
+    });
 
     // Build the sequence of throws
     const total_size = pattern.reduce((total, subArray) => total + subArray.length, 0);
     const N = total_size * 50;
-    const held_balls: Ball[] | undefined[] = Array(N); // TODO replace to juste balls to take.
-    const held_balls_hand: Ball[][][] | undefined[][] = [[], []];
+    const held_balls: Ball[] = Array(N); // TODO replace to juste balls to take.
+    const held_balls_hand: Ball[][][] = [[], []];
     for (let i = 0; i < simulator.balls.length; i++) {
         held_balls[i] = simulator.balls[i];
     }
-    for (let i = 0; i < N - total_size; i++) {
-        //const h = pattern.flat()[i % total_size];
-        const h =
-            pattern[i % pattern.length][
-                ~~(i / pattern.length) % pattern[i % pattern.length].length
-            ]; //[select each table one by one][select each i frome 0 to pattern[subarray].length, this for each subarray]
-        if (h === 0) {
-            thrown_from_0(held_balls, held_balls_hand, i);
-        } else {
-            if (held_balls_hand[i % 2][~~(i / pattern.length)] == undefined) {
-                if (held_balls[i] != undefined) {
-                    copyBalls(held_balls[i], held_balls_hand, i, pattern.length);
-                } else {
-                    console.log(
-                        "held_balls_hand[",
-                        i % 2,
-                        "][",
-                        ~~(i / pattern.length),
-                        "] et held_balls[",
-                        i,
-                        "] sont undefined."
-                    );
-                    //     deleteEmptyBox([], held_balls_hand, i, pattern.length);
-                    //     //held_balls_hand[i % 2].splice(~~(i / pattern.length), 1);
-                }
-            }
-            //Name for function held_balls[i] = function()
-            if (held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] == undefined) {
-                held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] = [];
-            }
-            held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h][
-                held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h].length
-            ] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
-            held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
-            if (held_balls_hand[i % 2][~~(i / pattern.length)].length > 1) {
-                if (held_balls_hand[i % 2][~~(i / pattern.length) + 1] != undefined) {
-                    held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
-                        ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1),
-                        ...held_balls_hand[i % 2][~~(i / pattern.length) + 1]
-                    ];
-                } else {
-                    held_balls_hand[i % 2][~~(i / pattern.length) + 1]?.push([]);
-                    held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
-                        ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1)
-                    ];
-                }
-            }
 
-            lance(
-                held_balls[i],
-                ~~(i / pattern.length) * u,
-                h * u - d,
-                vincent.hands[i % 2],
-                vincent.hands[(i + h) % 2],
-                u
-            );
+    pre_lancer(pattern, total_size, held_balls);
+    main(N, held_balls, held_balls_hand, pattern);
+    function main(N: number, held_balls: Ball[], held_balls_hand: Ball[][][], pattern: number[][]) {
+        for (let i = 0; i < N - total_size; i++) {
+            //const h = pattern.flat()[i % total_size];
+            const h =
+                pattern[i % pattern.length][
+                    ~~(i / pattern.length) % pattern[i % pattern.length].length
+                ]; //[select each table one by one][select each i frome 0 to pattern[subarray].length, this for each subarray]
+            if (h === 0) {
+                thrown_from_0(held_balls, held_balls_hand, i);
+            } else {
+                console.assert(held_balls_hand[i % 2][~~(i / pattern.length)] != undefined);
+                // if (held_balls_hand[i % 2][~~(i / pattern.length)] == undefined) {
+                //     //Impossible, but juste for verify
+                //     if (held_balls[i] != undefined) {
+                //         copyBalls(held_balls[i], held_balls_hand, i, pattern.length);
+                //     } else {
+                //         console.log(
+                //             "held_balls_hand[",
+                //             i % 2,
+                //             "][",
+                //             ~~(i / pattern.length),
+                //             "] et held_balls[",
+                //             i,
+                //             "] sont undefined.",
+                //             held_balls,
+                //             held_balls_hand
+                //         );
+                //         //     deleteEmptyBox([], held_balls_hand, i, pattern.length);
+                //         //     //held_balls_hand[i % 2].splice(~~(i / pattern.length), 1);
+                //     }
+                // }
+                if (held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] == undefined) {
+                    held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] = [];
+                }
+                held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h][
+                    held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h].length
+                ] = held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
+                //held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
+                if (held_balls_hand[i % 2][~~(i / pattern.length)].length > 1) {
+                    if (held_balls_hand[i % 2][~~(i / pattern.length) + 1] != undefined) {
+                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
+                            ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1),
+                            ...held_balls_hand[i % 2][~~(i / pattern.length) + 1]
+                        ];
+                    } else {
+                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [];
+                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
+                            ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1)
+                        ];
+                    }
+                }
+                const time: number = ~~(i / pattern.length) * u;
+                const flight_time: number = h * u - d;
+                lance(
+                    held_balls[i],
+                    time, //~~(i / pattern.length) * u,
+                    flight_time, //h * u - d,
+                    vincent.hands[i % 2],
+                    vincent.hands[(i + h) % 2],
+                    u
+                );
+            }
         }
+
+        console.log(held_balls_hand);
     }
 
-    console.log(held_balls_hand);
+    simulator.balls = simulator.balls.filter((ball) => {
+        return ball.timeline.length !== 0;
+    });
 }
 
 // Configuration
-const colors = ["red", "green", "blue", "purple", "yellow"];
+const colors = ["red", "green", "blue", "purple", "yellow", "orange", "pink"];
 const u2 = 0.25;
 const d2 = u2 / 2;
 
@@ -388,6 +418,7 @@ const PARAMS = {
 const siteswap_blade = pane.addBinding(PARAMS, "Siteswap");
 siteswap_blade.on("change", (ev) => {
     if (ev.value != "") {
+        simulator.reset_pattern();
         lance_pattern(conv_siteswap_to_pattern(ev.value), colors, u2, d2);
     }
 });
@@ -553,97 +584,97 @@ simulator.balls.forEach((ball) => {
 });
 
 //TODO : Merge geometries ?
-{
-    //Chest
-    let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
-        0.6 * Math.SQRT1_2,
-        0.4 * Math.SQRT1_2,
-        1,
-        4,
-        1
-    );
-    chest_geometry.rotateY(Math.PI / 4);
-    chest_geometry = chest_geometry.toNonIndexed();
-    chest_geometry.computeVertexNormals();
-    chest_geometry.scale(0.5, 1, 1);
-    const chest_material = new THREE.MeshPhongMaterial({ color: "green" });
-    const chest = new THREE.Mesh(chest_geometry, chest_material);
-    chest.position.set(0, 1.7, 0);
-    scene.add(chest);
+// {
+//     //Chest
+//     let chest_geometry: THREE.BufferGeometry = new THREE.CylinderGeometry(
+//         0.6 * Math.SQRT1_2,
+//         0.4 * Math.SQRT1_2,
+//         1,
+//         4,
+//         1
+//     );
+//     chest_geometry.rotateY(Math.PI / 4);
+//     chest_geometry = chest_geometry.toNonIndexed();
+//     chest_geometry.computeVertexNormals();
+//     chest_geometry.scale(0.5, 1, 1);
+//     const chest_material = new THREE.MeshPhongMaterial({ color: "green" });
+//     const chest = new THREE.Mesh(chest_geometry, chest_material);
+//     chest.position.set(0, 1.7, 0);
+//     scene.add(chest);
 
-    //Head
-    const head_geometry = new THREE.SphereGeometry(0.2);
-    head_geometry.scale(0.8, 1, 0.8);
-    const head = new THREE.Mesh(head_geometry, chest_material);
-    head.position.set(0, 0.75, 0);
-    chest.add(head);
+//     //Head
+//     const head_geometry = new THREE.SphereGeometry(0.2);
+//     head_geometry.scale(0.8, 1, 0.8);
+//     const head = new THREE.Mesh(head_geometry, chest_material);
+//     head.position.set(0, 0.75, 0);
+//     chest.add(head);
 
-    //Shoulders
-    const shoulder_material = new THREE.MeshPhongMaterial({ color: "red" });
-    const shoulder_geometry = new THREE.SphereGeometry(0.08);
-    const right_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
-    right_shoulder.position.set(0, 0.5, 0.3);
-    //right_shoulder.material.visible = false;
-    right_shoulder.rotateZ(-Math.PI / 2);
-    right_shoulder.rotateY(-0.2);
-    chest.add(right_shoulder);
-    const left_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
-    left_shoulder.position.set(0, 0.5, -0.3);
-    left_shoulder.rotateZ(-Math.PI / 2);
-    left_shoulder.rotateY(0.2);
-    chest.add(left_shoulder);
+//     //Shoulders
+//     const shoulder_material = new THREE.MeshPhongMaterial({ color: "red" });
+//     const shoulder_geometry = new THREE.SphereGeometry(0.08);
+//     const right_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
+//     right_shoulder.position.set(0, 0.5, 0.3);
+//     //right_shoulder.material.visible = false;
+//     right_shoulder.rotateZ(-Math.PI / 2);
+//     right_shoulder.rotateY(-0.2);
+//     chest.add(right_shoulder);
+//     const left_shoulder = new THREE.Mesh(shoulder_geometry, shoulder_material);
+//     left_shoulder.position.set(0, 0.5, -0.3);
+//     left_shoulder.rotateZ(-Math.PI / 2);
+//     left_shoulder.rotateY(0.2);
+//     chest.add(left_shoulder);
 
-    //Arms
-    const arm_length = 0.55;
-    const arm_material = new THREE.MeshPhongMaterial({ color: "white" });
-    const arm_geometry = new THREE.BoxGeometry(arm_length, 0.05, 0.05);
-    // const arm_geometry = new THREE.CylinderGeometry(0.03, 0.03, arm_length);
-    // arm_geometry.rotateZ(Math.PI / 2);
-    const right_arm = new THREE.Mesh(arm_geometry, arm_material);
-    right_arm.position.set(arm_length / 2, 0, 0);
-    right_shoulder.add(right_arm);
-    const left_arm = new THREE.Mesh(arm_geometry, arm_material);
-    left_arm.position.set(arm_length / 2, 0, 0);
-    left_shoulder.add(left_arm);
+//     //Arms
+//     const arm_length = 0.55;
+//     const arm_material = new THREE.MeshPhongMaterial({ color: "white" });
+//     const arm_geometry = new THREE.BoxGeometry(arm_length, 0.05, 0.05);
+//     // const arm_geometry = new THREE.CylinderGeometry(0.03, 0.03, arm_length);
+//     // arm_geometry.rotateZ(Math.PI / 2);
+//     const right_arm = new THREE.Mesh(arm_geometry, arm_material);
+//     right_arm.position.set(arm_length / 2, 0, 0);
+//     right_shoulder.add(right_arm);
+//     const left_arm = new THREE.Mesh(arm_geometry, arm_material);
+//     left_arm.position.set(arm_length / 2, 0, 0);
+//     left_shoulder.add(left_arm);
 
-    //Elbows
-    const elbow_geometry = new THREE.SphereGeometry(0.05);
-    const right_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
-    right_elbow.position.set(arm_length / 2, 0, 0);
-    right_elbow.rotateZ(Math.PI / 2);
-    right_arm.add(right_elbow);
-    const left_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
-    left_elbow.position.set(arm_length / 2, 0, 0);
-    left_elbow.rotateZ(Math.PI / 2);
-    left_arm.add(left_elbow);
+//     //Elbows
+//     const elbow_geometry = new THREE.SphereGeometry(0.05);
+//     const right_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
+//     right_elbow.position.set(arm_length / 2, 0, 0);
+//     right_elbow.rotateZ(Math.PI / 2);
+//     right_arm.add(right_elbow);
+//     const left_elbow = new THREE.Mesh(elbow_geometry, shoulder_material);
+//     left_elbow.position.set(arm_length / 2, 0, 0);
+//     left_elbow.rotateZ(Math.PI / 2);
+//     left_arm.add(left_elbow);
 
-    //Forearms
-    const right_forearm = new THREE.Mesh(arm_geometry, arm_material);
-    right_forearm.position.set(arm_length / 2, 0, 0);
-    right_elbow.add(right_forearm);
-    const left_forearm = new THREE.Mesh(arm_geometry, arm_material);
-    left_forearm.position.set(arm_length / 2, 0, 0);
-    left_elbow.add(left_forearm);
+//     //Forearms
+//     const right_forearm = new THREE.Mesh(arm_geometry, arm_material);
+//     right_forearm.position.set(arm_length / 2, 0, 0);
+//     right_elbow.add(right_forearm);
+//     const left_forearm = new THREE.Mesh(arm_geometry, arm_material);
+//     left_forearm.position.set(arm_length / 2, 0, 0);
+//     left_elbow.add(left_forearm);
 
-    //Hands
-    const hand_geometry = new THREE.SphereGeometry(0.05);
-    hand_geometry.scale(1, 0.8, 0.8);
-    const hand_material = new THREE.MeshPhongMaterial({ color: "black" });
-    const right_hand = new THREE.Mesh(hand_geometry, hand_material);
-    right_hand.position.set(arm_length / 2, 0, 0);
-    right_forearm.add(right_hand);
-    const left_hand = new THREE.Mesh(hand_geometry, hand_material);
-    left_hand.position.set(arm_length / 2, 0, 0);
-    left_forearm.add(left_hand);
+//     //Hands
+//     const hand_geometry = new THREE.SphereGeometry(0.05);
+//     hand_geometry.scale(1, 0.8, 0.8);
+//     const hand_material = new THREE.MeshPhongMaterial({ color: "black" });
+//     const right_hand = new THREE.Mesh(hand_geometry, hand_material);
+//     right_hand.position.set(arm_length / 2, 0, 0);
+//     right_forearm.add(right_hand);
+//     const left_hand = new THREE.Mesh(hand_geometry, hand_material);
+//     left_hand.position.set(arm_length / 2, 0, 0);
+//     left_forearm.add(left_hand);
 
-    //Legs
-    const leg_geometry = new THREE.BoxGeometry(0.15, 1.2, 0.1);
-    const right_leg = new THREE.Mesh(leg_geometry, chest_material);
-    right_leg.position.set(0, -1.1, 0.15);
-    chest.add(right_leg);
-    const left_leg = new THREE.Mesh(leg_geometry, chest_material);
-    left_leg.position.set(0, -1.1, -0.15);
-    chest.add(left_leg);
-}
+//     //Legs
+//     const leg_geometry = new THREE.BoxGeometry(0.15, 1.2, 0.1);
+//     const right_leg = new THREE.Mesh(leg_geometry, chest_material);
+//     right_leg.position.set(0, -1.1, 0.15);
+//     chest.add(right_leg);
+//     const left_leg = new THREE.Mesh(leg_geometry, chest_material);
+//     left_leg.position.set(0, -1.1, -0.15);
+//     chest.add(left_leg);
+// }
 
 requestAnimationFrame(render);

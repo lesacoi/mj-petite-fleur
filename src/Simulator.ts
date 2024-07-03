@@ -3,6 +3,7 @@ import { Ball } from "./Ball";
 import { Juggler } from "./Juggler";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { EffectComposer } from "three/examples/jsm/Addons.js";
+import createRBTree from "functional-red-black-tree";
 
 function resizeRendererToDisplaySize(
     renderer: THREE.WebGLRenderer,
@@ -55,8 +56,8 @@ class Simulator {
         const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 50);
         const controls = new OrbitControls(camera, renderer.domElement);
         //camera.position.set(0.0796859236518283, 2.466905446060931, -0.003956106766785765);
-        camera.position.set(2, 1, 0.75);
-        controls.target.set(0, 0, 0);
+        camera.position.set(2, 2, 0.75);
+        controls.target.set(0, 1, 0);
         controls.update();
 
         const background_color = window.getComputedStyle(canvas).backgroundColor;
@@ -102,6 +103,17 @@ class Simulator {
 
         requestAnimationFrame(this.render);
     };
+
+    reset_pattern(): void {
+        for (const ball of this.balls) {
+            ball.timeline = createRBTree();
+            this.scene.remove(ball.mesh);
+        }
+        for (const juggler of this.jugglers) {
+            juggler.right_hand.timeline = createRBTree();
+            juggler.left_hand.timeline = createRBTree();
+        }
+    }
 }
 
 // function create_juggler_mesh() {
