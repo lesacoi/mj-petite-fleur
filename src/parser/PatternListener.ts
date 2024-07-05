@@ -1,9 +1,8 @@
-// Generated from c:/Users/leosailhac/Desktop/mj-petite-fleur/Pattern.g4 by ANTLR 4.13.1
+// Generated from Pattern.g4 by ANTLR 4.13.1
 
 import { ErrorNode, ParseTreeListener, ParserRuleContext, TerminalNode } from "antlr4ng";
 
 
-import { ProgContext } from "./PatternParser.js";
 import { PatternContext } from "./PatternParser.js";
 import { Mirror_patternContext } from "./PatternParser.js";
 import { SequenceContext } from "./PatternParser.js";
@@ -11,6 +10,8 @@ import { Schync_sequenceContext } from "./PatternParser.js";
 import { Multiplex_sequenceContext } from "./PatternParser.js";
 import { Repeat_sequenceContext } from "./PatternParser.js";
 import { ThrowContext } from "./PatternParser.js";
+import { C_handContext } from "./PatternParser.js";
+import { IntContext } from "./PatternParser.js";
 
 
 /**
@@ -18,16 +19,6 @@ import { ThrowContext } from "./PatternParser.js";
  * `PatternParser`.
  */
 export class PatternListener implements ParseTreeListener {
-    /**
-     * Enter a parse tree produced by `PatternParser.prog`.
-     * @param ctx the parse tree
-     */
-    enterProg?: (ctx: ProgContext) => void;
-    /**
-     * Exit a parse tree produced by `PatternParser.prog`.
-     * @param ctx the parse tree
-     */
-    exitProg?: (ctx: ProgContext) => void;
     /**
      * Enter a parse tree produced by `PatternParser.pattern`.
      * @param ctx the parse tree
@@ -98,6 +89,26 @@ export class PatternListener implements ParseTreeListener {
      * @param ctx the parse tree
      */
     exitThrow?: (ctx: ThrowContext) => void;
+    /**
+     * Enter a parse tree produced by `PatternParser.c_hand`.
+     * @param ctx the parse tree
+     */
+    enterC_hand?: (ctx: C_handContext) => void;
+    /**
+     * Exit a parse tree produced by `PatternParser.c_hand`.
+     * @param ctx the parse tree
+     */
+    exitC_hand?: (ctx: C_handContext) => void;
+    /**
+     * Enter a parse tree produced by `PatternParser.int`.
+     * @param ctx the parse tree
+     */
+    enterInt?: (ctx: IntContext) => void;
+    /**
+     * Exit a parse tree produced by `PatternParser.int`.
+     * @param ctx the parse tree
+     */
+    exitInt?: (ctx: IntContext) => void;
 
     visitTerminal(node: TerminalNode): void {}
     visitErrorNode(node: ErrorNode): void {}

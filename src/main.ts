@@ -8,6 +8,7 @@ import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 import { JugglingEvent } from "./Timeline";
 import { Hand } from "./Hand";
 import * as Tone from "tone";
+import { MyVisitor, pier, tree } from "./ParserLexerPattern";
 
 //TODO : With react, handle volume button being pressed as interaction ?
 //TODO : Test on phone if touch correctly starts audio
@@ -182,7 +183,7 @@ function lance(
 function conv_siteswap_to_pattern(siteswap: string): number[][] {
     const pattern: number[][] = [[], []];
     if (!siteswap.includes("(")) {
-        if (siteswap.length % 2 == 1) {
+        if (siteswap.length % 2 === 1) {
             siteswap = siteswap + siteswap;
         }
         for (let i = 0; i < siteswap.length; i++) {
@@ -220,7 +221,7 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
         function known_all_positions(pier: number[][]): boolean {
             for (let i = 0; i < thrown_max - 1; i++) {
                 for (const subArray of pier) {
-                    if (!(subArray[i] == 0 || subArray[i] == 1)) {
+                    if (!(subArray[i] === 0 || subArray[i] === 1)) {
                         return false;
                     }
                 }
@@ -228,13 +229,13 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
             return true;
         }
         //const pier: number[][] = [];
-        const pier: number[][] = Array.from(pattern, () => Array(thrown_max));
+        const pier: number[][] = Array.from(pattern, () => Array<number>(thrown_max));
         // for (const item of pattern) {
         //     pier.push([]); // Ajoutez un nouveau sous-tableau vide
         //}
         while (!known_all_positions(pier)) {
             for (let i = 0; i < size; i++) {
-                if (i % pattern.length == 0) {
+                if (i % pattern.length === 0) {
                     for (let i2 = 0; i2 < pattern.length; i2++) {
                         pier[i2].splice(0, 1);
                         pier[i2][thrown_max - 1] = 0;
@@ -255,7 +256,7 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
 
         // Make spattern and execute it
         for (let i = 0; i < totale_size; i++) {
-            if (pier[i % pier.length][~~(i / pier.length)] == 1) {
+            if (pier[i % pier.length][~~(i / pier.length)] === 1) {
                 const last_spattern_position = spattern.flat().length;
                 spattern[i % pier.length][last_spattern_position] = ~~(i / pier.length) + 1;
                 copyBalls(held_balls[last_spattern_position], held_balls_hand, i, pier.length);
@@ -316,7 +317,7 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
     // Build the sequence of throws
     const total_size = pattern.reduce((total, subArray) => total + subArray.length, 0);
     const N = total_size * 50;
-    const held_balls: Ball[] = Array(N); // TODO replace to juste balls to take.
+    const held_balls: Ball[] = Array<Ball>(N); // TODO replace to juste balls to take.
     const held_balls_hand: Ball[][][] = [[], []];
     for (let i = 0; i < simulator.balls.length; i++) {
         held_balls[i] = simulator.balls[i];
@@ -413,7 +414,7 @@ const pane = new TWEAKPANE.Pane({ container: tweakpane_container });
 const PARAMS = {
     Siteswap: "(66)(20)(40)"
 };
-
+//TODO: Handle pattern errors
 //Build siteswap_blade and check change
 const siteswap_blade = pane.addBinding(PARAMS, "Siteswap");
 siteswap_blade.on("change", (ev) => {
@@ -422,6 +423,11 @@ siteswap_blade.on("change", (ev) => {
         lance_pattern(conv_siteswap_to_pattern(ev.value), colors, u2, d2);
     }
 });
+
+const visitor = new MyVisitor<pier[]>();
+const result = visitor.visit(tree);
+
+console.log(result);
 
 // Pattern
 

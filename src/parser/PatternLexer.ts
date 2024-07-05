@@ -1,4 +1,4 @@
-// Generated from c:/Users/leosailhac/Desktop/mj-petite-fleur/Pattern.g4 by ANTLR 4.13.1
+// Generated from Pattern.g4 by ANTLR 4.13.1
 
 import * as antlr from "antlr4ng";
 import { Token } from "antlr4ng";
