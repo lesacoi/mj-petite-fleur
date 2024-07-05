@@ -11,6 +11,12 @@ importers:
       '@tweakpane/plugin-essentials':
         specifier: ^0.2.1
         version: 0.2.1(tweakpane@4.0.3)
+      antlr4:
+        specifier: 4.13.1-patch-1
+        version: 4.13.1-patch-1
+      antlr4ng:
+        specifier: ^3.0.4
+        version: 3.0.4(antlr4ng-cli@2.0.0)
       functional-red-black-tree:
         specifier: ^1.0.1
         version: 1.0.1
@@ -441,6 +447,19 @@ packages:
   ansi-styles@4.3.0:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
+
+  antlr4@4.13.1-patch-1:
+    resolution: {integrity: sha512-OjFLWWLzDMV9rdFhpvroCWR4ooktNg9/nvVYSA5z28wuVpU36QUNuioR1XLnQtcjVlf8npjyz593PxnU/f/Cow==}
+    engines: {node: '>=16'}
+
+  antlr4ng-cli@2.0.0:
+    resolution: {integrity: sha512-oAt5OSSYhRQn1PgahtpAP4Vp3BApCoCqlzX7Q8ZUWWls4hX59ryYuu0t7Hwrnfk796OxP/vgIJaqxdltd/oEvQ==}
+    hasBin: true
+
+  antlr4ng@3.0.4:
+    resolution: {integrity: sha512-u1Ww6wVv9hq70E9AaYe5qW3ba8hvnjJdO3ZsKnb3iJWFV/medLEEhbyWwXCvvD2ef0ptdaiIUgmaazS/WE6uyQ==}
+    peerDependencies:
+      antlr4ng-cli: ^2.0.0
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
@@ -1251,6 +1270,14 @@ snapshots:
   ansi-styles@4.3.0:
     dependencies:
       color-convert: 2.0.1
+
+  antlr4@4.13.1-patch-1: {}
+
+  antlr4ng-cli@2.0.0: {}
+
+  antlr4ng@3.0.4(antlr4ng-cli@2.0.0):
+    dependencies:
+      antlr4ng-cli: 2.0.0
 
   argparse@2.0.1: {}
 
