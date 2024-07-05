@@ -94,12 +94,17 @@ const sfx_buffers = {
     weak_hit_shaker: new Tone.ToneAudioBuffer("grelot_balls_sfx/weak_hit_shaker.mp3")
 };
 
+const weak_hit = ["weak_hit1", "weak_hit2"];
+const normal_hit = ["normal_hit1", "normal_hit2"];
+const heavy_hit = ["heavy_hit1", "heavy_hit2", "heavy_hit3"];
+
 const music = new Audio("petite_fleur_vincent.mp3");
 const music_tone = context.createMediaElementSource(music);
 const music_gain = new Tone.Gain().toDestination();
 Tone.connect(music_tone, music_gain);
 const sfx_gain = new Tone.Gain().toDestination();
 sfx_gain.gain.value = 0;
+music_gain.gain.value = 0;
 
 // await Tone.loaded();
 // await Tone.start();
@@ -161,10 +166,32 @@ function lance(
 // Petite Fleur
 // const left = vincent.left_hand;
 // const right = vincent.right_hand;
-// const u = 1 / 265;
-// const d = u / 2;
-// const first_catch = 5.712;
-// const pattern = "5 0 0 3^4 ((441)^3 3^7)^3 441 441 4010 0 0";
+// let ball0 = simulator.balls[0];
+// let ball1 = simulator.balls[1];
+// let ball2 = simulator.balls[2];
+// const u = 60 / 265;
+// const d = u / 3;
+// // const t = 56.153;
+
+// let t = 0;
+// for (let i = 0; i < 10; i++) {
+//     lance(ball0, t + 0 * u, 3.5 * u - d, left, left, u, heavy_hit);
+//     lance(ball1, t + 1 * u, 4 * u - d, right, left, u, heavy_hit);
+//     lance(ball2, t + 2 * u, 1 * u - d, left, right, u, heavy_hit);
+//     lance(ball2, t + 3 * u, 3 * u - d, right, left, u, normal_hit);
+//     lance(ball0, t + 3.5 * u, 0.5 * u - d, left, right, u, heavy_hit);
+//     // lance(ball0, t + 4 * u, 1.5 * u - d, right, right, u);
+//     lance(ball1, t + 5 * u, 2 * u - d, left, right, u, normal_hit);
+//     lance(ball0, t + 5.5 * u, 3.5 * u - d, right, right, u, normal_hit);
+//     lance(ball2, t + 6 * u, 4 * u - d, left, left, u, normal_hit);
+//     lance(ball1, t + 7 * u, 1 * u - d, right, left, u, heavy_hit);
+//     const tmp = ball0;
+//     ball0 = ball1;
+//     ball1 = tmp;
+//     ball2 = ball2;
+//     t = t + 8 * u;
+// }
+
 // for (let i = 0; i < 100; i++) {
 //     lance(
 //         simulator.balls[i % 3],
@@ -480,6 +507,7 @@ lance_pattern(pattern, colors, u2, d2);
 //     throw new Error();
 // }
 // const pane = new TWEAKPANE.Pane({ container: tweakpane_container });
+
 pane.registerPlugin(EssentialsPlugin);
 const fpsGraph = pane.addBlade({
     view: "fpsgraph",

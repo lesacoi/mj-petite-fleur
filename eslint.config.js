@@ -7,7 +7,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 export default tseslint.config(
     {
         files: ["src/**/*.js", "src/**/*.ts"],
-        ignores: ["**/.antlr/*"],
+        ignores: ["**/parser/*"],
         extends: [
             eslint.configs.recommended,
             ...tseslint.configs.strictTypeChecked,
@@ -18,8 +18,8 @@ export default tseslint.config(
             parserOptions: {
                 project: true,
                 tsconfigRootDir: import.meta.dirname,
-                },
             },
+        },
         rules: {
             "@typescript-eslint/no-non-null-assertion": "off",
             "@typescript-eslint/restrict-template-expressions": "off",
