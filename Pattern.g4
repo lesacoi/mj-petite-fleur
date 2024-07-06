@@ -1,11 +1,18 @@
 grammar Pattern;
-pattern: sequence+ | mirror_pattern;
-mirror_pattern: sequence+ '*';
-sequence:
-	throw+
-	| repeat_sequence
-	| schync_sequence
-	| multiplex_sequence;
+pattern: (
+		sequence+
+		| repeat_sequence+
+		| schync_sequence+
+		| multiplex_sequence+
+	)
+	| mirror_pattern;
+mirror_pattern: (
+		sequence+
+		| repeat_sequence+
+		| schync_sequence+
+		| multiplex_sequence+
+	) '*';
+sequence: throw+;
 
 schync_sequence:
 	'(' (throw+ | multiplex_sequence) ',' (

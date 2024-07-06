@@ -8,7 +8,7 @@ import * as EssentialsPlugin from "@tweakpane/plugin-essentials";
 import { JugglingEvent } from "./Timeline";
 import { Hand } from "./Hand";
 import * as Tone from "tone";
-import { MyVisitor, pier, tree } from "./ParserLexerPattern";
+import { MyVisitor, pier, makeTree } from "./ParserLexerPattern";
 
 //TODO : With react, handle volume button being pressed as interaction ?
 //TODO : Test on phone if touch correctly starts audio
@@ -450,6 +450,8 @@ siteswap_blade.on("change", (ev) => {
         lance_pattern(conv_siteswap_to_pattern(ev.value), colors, u2, d2);
     }
 });
+
+const tree = makeTree("(5,5)");
 
 const visitor = new MyVisitor<pier[]>();
 const result = visitor.visit(tree);
