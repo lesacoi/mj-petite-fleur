@@ -6,9 +6,9 @@ import { ErrorNode, ParseTreeListener, ParserRuleContext, TerminalNode } from "a
 import { PatternContext } from "./PatternParser.js";
 import { Mirror_patternContext } from "./PatternParser.js";
 import { SequenceContext } from "./PatternParser.js";
-import { Schync_sequenceContext } from "./PatternParser.js";
-import { Multiplex_sequenceContext } from "./PatternParser.js";
+import { Synchr_sequenceContext } from "./PatternParser.js";
 import { Repeat_sequenceContext } from "./PatternParser.js";
+import { Multiplex_sequenceContext } from "./PatternParser.js";
 import { ThrowContext } from "./PatternParser.js";
 import { C_handContext } from "./PatternParser.js";
 import { IntContext } from "./PatternParser.js";
@@ -50,25 +50,15 @@ export class PatternListener implements ParseTreeListener {
      */
     exitSequence?: (ctx: SequenceContext) => void;
     /**
-     * Enter a parse tree produced by `PatternParser.schync_sequence`.
+     * Enter a parse tree produced by `PatternParser.synchr_sequence`.
      * @param ctx the parse tree
      */
-    enterSchync_sequence?: (ctx: Schync_sequenceContext) => void;
+    enterSynchr_sequence?: (ctx: Synchr_sequenceContext) => void;
     /**
-     * Exit a parse tree produced by `PatternParser.schync_sequence`.
+     * Exit a parse tree produced by `PatternParser.synchr_sequence`.
      * @param ctx the parse tree
      */
-    exitSchync_sequence?: (ctx: Schync_sequenceContext) => void;
-    /**
-     * Enter a parse tree produced by `PatternParser.multiplex_sequence`.
-     * @param ctx the parse tree
-     */
-    enterMultiplex_sequence?: (ctx: Multiplex_sequenceContext) => void;
-    /**
-     * Exit a parse tree produced by `PatternParser.multiplex_sequence`.
-     * @param ctx the parse tree
-     */
-    exitMultiplex_sequence?: (ctx: Multiplex_sequenceContext) => void;
+    exitSynchr_sequence?: (ctx: Synchr_sequenceContext) => void;
     /**
      * Enter a parse tree produced by `PatternParser.repeat_sequence`.
      * @param ctx the parse tree
@@ -79,6 +69,16 @@ export class PatternListener implements ParseTreeListener {
      * @param ctx the parse tree
      */
     exitRepeat_sequence?: (ctx: Repeat_sequenceContext) => void;
+    /**
+     * Enter a parse tree produced by `PatternParser.multiplex_sequence`.
+     * @param ctx the parse tree
+     */
+    enterMultiplex_sequence?: (ctx: Multiplex_sequenceContext) => void;
+    /**
+     * Exit a parse tree produced by `PatternParser.multiplex_sequence`.
+     * @param ctx the parse tree
+     */
+    exitMultiplex_sequence?: (ctx: Multiplex_sequenceContext) => void;
     /**
      * Enter a parse tree produced by `PatternParser.throw`.
      * @param ctx the parse tree

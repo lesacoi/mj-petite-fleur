@@ -1,26 +1,18 @@
 grammar Pattern;
-pattern: (
-		sequence+
-		| repeat_sequence+
-		| schync_sequence+
-		| multiplex_sequence+
-	)
-	| mirror_pattern;
-mirror_pattern: (
-		sequence+
-		| repeat_sequence+
-		| schync_sequence+
-		| multiplex_sequence+
-	) '*';
-sequence: throw+;
-
-schync_sequence:
+// multiplayeurs_pattern: pattern+; ----------------------------------------------------------------
+// TODO: pattern: (sequence | synchr_sequence+)+ | mirror_pattern; To accept
+// sequence+synchr_sequence
+pattern: (sequence | synchr_sequence+) | mirror_pattern;
+mirror_pattern: (sequence | synchr_sequence+) '*';
+sequence: (throw+ | multiplex_sequence+ | repeat_sequence+)+;
+synchr_sequence:
 	'(' (throw+ | multiplex_sequence) ',' (
 		throw+
 		| multiplex_sequence
 	) ')';
+repeat_sequence: '(' (throw+ | multiplex_sequence+) '^' int ')';
+//TODO: add synchr_sequence and edit ParserLexerPattern.ts
 multiplex_sequence: '[' throw+ ']';
-repeat_sequence: '(' throw+ '^' int ')';
 NEWLINE: [\r\n]+ -> skip;
 throw: int | c_hand;
 c_hand: INT 'x';

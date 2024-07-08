@@ -6,9 +6,9 @@ import { AbstractParseTreeVisitor } from "antlr4ng";
 import { PatternContext } from "./PatternParser.js";
 import { Mirror_patternContext } from "./PatternParser.js";
 import { SequenceContext } from "./PatternParser.js";
-import { Schync_sequenceContext } from "./PatternParser.js";
-import { Multiplex_sequenceContext } from "./PatternParser.js";
+import { Synchr_sequenceContext } from "./PatternParser.js";
 import { Repeat_sequenceContext } from "./PatternParser.js";
+import { Multiplex_sequenceContext } from "./PatternParser.js";
 import { ThrowContext } from "./PatternParser.js";
 import { C_handContext } from "./PatternParser.js";
 import { IntContext } from "./PatternParser.js";
@@ -41,23 +41,23 @@ export class PatternVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      */
     visitSequence?: (ctx: SequenceContext) => Result;
     /**
-     * Visit a parse tree produced by `PatternParser.schync_sequence`.
+     * Visit a parse tree produced by `PatternParser.synchr_sequence`.
      * @param ctx the parse tree
      * @return the visitor result
      */
-    visitSchync_sequence?: (ctx: Schync_sequenceContext) => Result;
-    /**
-     * Visit a parse tree produced by `PatternParser.multiplex_sequence`.
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    visitMultiplex_sequence?: (ctx: Multiplex_sequenceContext) => Result;
+    visitSynchr_sequence?: (ctx: Synchr_sequenceContext) => Result;
     /**
      * Visit a parse tree produced by `PatternParser.repeat_sequence`.
      * @param ctx the parse tree
      * @return the visitor result
      */
     visitRepeat_sequence?: (ctx: Repeat_sequenceContext) => Result;
+    /**
+     * Visit a parse tree produced by `PatternParser.multiplex_sequence`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitMultiplex_sequence?: (ctx: Multiplex_sequenceContext) => Result;
     /**
      * Visit a parse tree produced by `PatternParser.throw`.
      * @param ctx the parse tree

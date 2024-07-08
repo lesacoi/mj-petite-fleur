@@ -451,7 +451,7 @@ siteswap_blade.on("change", (ev) => {
     }
 });
 
-const tree = makeTree("(5,5)");
+const tree = makeTree("(2,0)(4,0)");
 
 const visitor = new MyVisitor<pier[]>();
 const result = visitor.visit(tree);

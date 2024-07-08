@@ -5,7 +5,7 @@ import {
     IntContext,
     PatternContext,
     PatternParser,
-    Schync_sequenceContext,
+    synchr_sequenceContext,
     SequenceContext,
     ThrowContext
 } from "./parser/PatternParser.ts";
@@ -44,6 +44,8 @@ class pier {
 
 class MyVisitor<result> extends PatternVisitor<result> {
     nulPier = new pier(0, 0, 0, 0, 0);
+    //TODO: manage sequence+synchr_sequence =>
+    //if (sequence.length%2 === 1) synchr_sequence[0] = synchr_sequence[1]
     public visitPattern = (ctx: PatternContext): result => {
         const nHand = 2;
         const pattern: result[][] = Array(nHand)
@@ -61,22 +63,21 @@ class MyVisitor<result> extends PatternVisitor<result> {
         return pattern;
     };
 
-    public visitSchync_sequence = (ctx: Schync_sequenceContext): result => {
+    public visitSynchr_sequence = (ctx: Synchr_sequenceContext): result => {
         const nHand = 2;
-        const schync_sequence: result[][] = Array(nHand)
+        const synchr_sequence: result[][] = Array(nHand)
             .fill(null)
             .map(() => Array<result>());
         let i = 0;
         for (const child of ctx.children) {
             const childContext = this.visit(child);
-            console.log(childContext);
             if (childContext != null) {
-                schync_sequence[i % nHand].push(childContext[0]);
-                schync_sequence[i % nHand].push(this.nulPier);
+                synchr_sequence[i % nHand].push(childContext[0]);
+                synchr_sequence[i % nHand].push(this.nulPier);
                 i++;
             }
         }
-        return schync_sequence;
+        return synchr_sequence;
     };
     public visitSequence = (ctx: SequenceContext): result => {
         const nHand = 2;
@@ -84,18 +85,15 @@ class MyVisitor<result> extends PatternVisitor<result> {
             .fill(null)
             .map(() => Array<result>());
         let i = 0;
-        while (true) {
-            for (const child of ctx.children) {
-                const childContext: result[] = this.visit(child);
-                for (const pier of childContext) {
-                    if (pier != undefined) {
-                        sequence[i % nHand].push(pier);
-                        sequence[(i + 1) % nHand].push(this.nulPier);
-                        i++;
-                    }
+        for (const child of ctx.children) {
+            const childContext: result[] = this.visit(child);
+            for (const pier of childContext) {
+                if (pier != undefined) {
+                    sequence[i % nHand].push(pier);
+                    sequence[(i + 1) % nHand].push(this.nulPier);
+                    i++;
                 }
             }
-            if (i % nHand != 1) break;
         }
         return sequence;
     };
