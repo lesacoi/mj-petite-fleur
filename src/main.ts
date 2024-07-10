@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import * as THREE from "three";
 import { resizeRendererToDisplaySize, Simulator } from "./Simulator";
@@ -207,44 +208,51 @@ function lance(
 //////////////////////////////////////////////////////////////////////////////
 // Edit here
 //////////////////////////////////////////////////////////////////////////////
-function conv_siteswap_to_pattern(siteswap: string): number[][] {
-    const pattern: number[][] = [[], []];
-    if (!siteswap.includes("(")) {
-        if (siteswap.length % 2 === 1) {
-            siteswap = siteswap + siteswap;
-        }
-        for (let i = 0; i < siteswap.length; i++) {
-            pattern[i % 2][i] = parseInt(siteswap.substring(i, i + 1));
-            pattern[(i + 1) % 2][i] = 0;
-        }
-    } else {
-        let c = 0;
-        //for (let i = 0; i != -1; i = siteswap.indexOf(")", i))
+// function conv_siteswap_to_pattern(siteswap: string): number[][] {
+//     const pattern: number[][] = [[], []];
+//     if (!siteswap.includes("(")) {
+//         if (siteswap.length % 2 === 1) {
+//             siteswap = siteswap + siteswap;
+//         }
+//         for (let i = 0; i < siteswap.length; i++) {
+//             pattern[i % 2][i] = parseInt(siteswap.substring(i, i + 1));
+//             pattern[(i + 1) % 2][i] = 0;
+//         }
+//     } else {
+//         let c = 0;
+//         //for (let i = 0; i != -1; i = siteswap.indexOf(")", i))
 
-        while (c < siteswap.length) {
-            if (siteswap.includes("(", c)) {
-                const synchro = siteswap.substring(
-                    siteswap.indexOf("(", c) + 1,
-                    siteswap.indexOf(")", c)
-                );
-                for (let i = 0; i < synchro.length; i++) {
-                    pattern[i % 2][pattern[i % 2].length] = parseInt(synchro.substring(i, i + 1)); //We add to the last box the throw
-                    pattern[i % 2][pattern[i % 2].length] = 0; //We add zero to the last box
-                }
-                c = siteswap.indexOf(")", c) + 1;
-            } else {
-                break;
-            }
-        }
-    }
-    //console.log(pattern);
-    return pattern;
-}
+//         while (c < siteswap.length) {
+//             if (siteswap.includes("(", c)) {
+//                 const synchro = siteswap.substring(
+//                     siteswap.indexOf("(", c) + 1,
+//                     siteswap.indexOf(")", c)
+//                 );
+//                 for (let i = 0; i < synchro.length; i++) {
+//                     pattern[i % 2][pattern[i % 2].length] = parseInt(synchro.substring(i, i + 1)); //We add to the last box the throw
+//                     pattern[i % 2][pattern[i % 2].length] = 0; //We add zero to the last box
+//                 }
+//                 c = siteswap.indexOf(")", c) + 1;
+//             } else {
+//                 break;
+//             }
+//         }
+//     }
+//     //console.log(pattern);
+//     return pattern;
+// }
 
-function lance_pattern(pattern: number[][], colors: string[], u: number, d: number): void {
-    function pre_lancer(pattern: number[][], size: number, held_balls: Ball[]): void {
+function lance_pattern(pattern: pier[][], colors: string[], u: number, d: number): void {
+    function pre_lancer(pattern: pier[][], size: number, held_balls: Ball[]): void {
         /// May be convert to boolean to handle errors
-        const thrown_max = Math.max(...pattern.flat());
+        // For pier:
+        const flat = pattern.flat();
+        const hauteur = [];
+        for (const pier of flat) {
+            hauteur.push(pier.hauteur);
+        }
+        const thrown_max = Math.max(...hauteur);
+        // const thrown_max = Math.max(...pattern.flat());
         function known_all_positions(pier: number[][]): boolean {
             for (let i = 0; i < thrown_max - 1; i++) {
                 for (const subArray of pier) {
@@ -268,12 +276,13 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
                         pier[i2][thrown_max - 1] = 0;
                     }
                 }
-                if (pattern[i % pattern.length][~~(i / pattern.length)] != 0) {
+                if (pattern[i % pattern.length][~~(i / pattern.length)].hauteur != 0) {
+                    //if (pattern[i % pattern.length][~~(i / pattern.length)] != 0) {
                     pier[
                         ((i % pattern.length) +
-                            pattern[i % pattern.length][~~(i / pattern.length)]) %
+                            pattern[i % pattern.length][~~(i / pattern.length)].hauteur) %
                             2
-                    ][pattern[i % pattern.length][~~(i / pattern.length)] - 1] = 1;
+                    ][pattern[i % pattern.length][~~(i / pattern.length)].hauteur - 1] = 1;
                 }
             }
         }
@@ -299,6 +308,7 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
         }
         //console.log(spattern);
     }
+
     function thrown_from_0(held_balls: Ball[], held_balls_hand: Ball[][][], i: number): void {
         if (held_balls_hand[i % 2][~~(i / pattern.length)] != undefined) {
             for (let i2 = 0; i2 < held_balls_hand[i % 2][~~(i / pattern.length)].length; i2++) {
@@ -319,16 +329,115 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
         //     //console.log(held_balls, i);
         // }
     }
+
     function copyBalls(ball: Ball, held_balls_hand: Ball[][][], i: number, length: number): void {
         const table: Ball[] = [];
         held_balls_hand[i % 2][~~(i / length)] = table;
         held_balls_hand[i % 2][~~(i / length)][0] = ball;
     }
 
+    function main(N: number, held_balls: Ball[], held_balls_hand: Ball[][][], pattern: pier[][]) {
+        for (let i = 0; i < N - total_size; i++) {
+            //const h = pattern.flat()[i % total_size];
+            const h =
+                pattern[i % pattern.length][
+                    ~~(i / pattern.length) % pattern[i % pattern.length].length
+                ].hauteur; //[select each table one by one][select each i frome 0 to pattern[subarray].length, this for each subarray]
+            if (h === 0) {
+                thrown_from_0(held_balls, held_balls_hand, i);
+            } else {
+                console.assert(
+                    held_balls_hand[i % 2][~~(i / pattern.length)] != undefined,
+                    "held_balls_hand[i % 2][~~(i / pattern.length)] === undefined"
+                );
+                // if (held_balls_hand[i % 2][~~(i / pattern.length)] == undefined) {
+                //     //Impossible, but juste for verify
+                //     if (held_balls[i] != undefined) {
+                //         copyBalls(held_balls[i], held_balls_hand, i, pattern.length);
+                //     } else {
+                //         console.log(
+                //             "held_balls_hand[",
+                //             i % 2,
+                //             "][",
+                //             ~~(i / pattern.length),
+                //             "] et held_balls[",
+                //             i,
+                //             "] sont undefined.",
+                //             held_balls,
+                //             held_balls_hand
+                //         );
+                //         //     deleteEmptyBox([], held_balls_hand, i, pattern.length);
+                //         //     //held_balls_hand[i % 2].splice(~~(i / pattern.length), 1);
+                //     }
+                // }
+                const inversion: number =
+                    pattern[i % pattern.length][
+                        ~~(i / pattern.length) % pattern[i % pattern.length].length
+                    ].target;
+                if (
+                    held_balls_hand[(i + h + inversion) % 2][~~(i / pattern.length) + h] ==
+                    undefined
+                ) {
+                    held_balls_hand[(i + h + inversion) % 2][~~(i / pattern.length) + h] = [];
+                }
+                held_balls_hand[(i + h + inversion) % 2][~~(i / pattern.length) + h][
+                    held_balls_hand[(i + h + inversion) % 2][~~(i / pattern.length) + h].length
+                ] = held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
+                //held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
+                if (held_balls_hand[i % 2][~~(i / pattern.length)].length > 1) {
+                    if (held_balls_hand[i % 2][~~(i / pattern.length) + 1] != undefined) {
+                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
+                            ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1),
+                            ...held_balls_hand[i % 2][~~(i / pattern.length) + 1]
+                        ];
+                    } else {
+                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [];
+                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
+                            ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1)
+                        ];
+                    }
+                }
+                let time: number = ~~(i / pattern.length) * u;
+                let flight_time: number = h * u - d;
+                const timeExecution: number = pattern[0].length * u; //duration of one execution
+                const nExecution: number = ~~(i / total_size); // number of execution
+                const timeInExecution: number =
+                    pattern[i % pattern.length][
+                        ~~(i / pattern.length) % pattern[i % pattern.length].length
+                    ].time;
+                console.assert(
+                    timeExecution * nExecution + timeInExecution === time,
+                    "//Temps préenregistré dans pier ne correspond pas avec le temps calculé."
+                );
+                console.assert(
+                    pattern[i % pattern.length][
+                        ~~(i / pattern.length) % pattern[i % pattern.length].length
+                    ].flight_time === flight_time,
+                    "//Temps de vole préenregistré dans pier ne correspond pas avec le temps calculé."
+                );
+                time = timeExecution * nExecution + timeInExecution;
+                flight_time =
+                    pattern[i % pattern.length][
+                        ~~(i / pattern.length) % pattern[i % pattern.length].length
+                    ].flight_time;
+                lance(
+                    held_balls[i],
+                    time, //~~(i / pattern.length) * u,
+                    flight_time, //h * u - d,
+                    vincent.hands[i % 2],
+                    vincent.hands[(i + h + inversion) % 2],
+                    u
+                );
+            }
+        }
+
+        console.log(held_balls_hand);
+    }
+
     // Count the balls needed and check if it is_Parallel
     let n_balls = 0;
     for (const subArray of pattern) {
-        n_balls += subArray.reduce((p, c) => p + c, 0) / subArray.length;
+        n_balls += subArray.reduce((p, c) => p + c.hauteur, 0) / subArray.length; //c.hauteur
     }
 
     // Build the balls
@@ -352,72 +461,6 @@ function lance_pattern(pattern: number[][], colors: string[], u: number, d: numb
 
     pre_lancer(pattern, total_size, held_balls);
     main(N, held_balls, held_balls_hand, pattern);
-    function main(N: number, held_balls: Ball[], held_balls_hand: Ball[][][], pattern: number[][]) {
-        for (let i = 0; i < N - total_size; i++) {
-            //const h = pattern.flat()[i % total_size];
-            const h =
-                pattern[i % pattern.length][
-                    ~~(i / pattern.length) % pattern[i % pattern.length].length
-                ]; //[select each table one by one][select each i frome 0 to pattern[subarray].length, this for each subarray]
-            if (h === 0) {
-                thrown_from_0(held_balls, held_balls_hand, i);
-            } else {
-                console.assert(held_balls_hand[i % 2][~~(i / pattern.length)] != undefined);
-                // if (held_balls_hand[i % 2][~~(i / pattern.length)] == undefined) {
-                //     //Impossible, but juste for verify
-                //     if (held_balls[i] != undefined) {
-                //         copyBalls(held_balls[i], held_balls_hand, i, pattern.length);
-                //     } else {
-                //         console.log(
-                //             "held_balls_hand[",
-                //             i % 2,
-                //             "][",
-                //             ~~(i / pattern.length),
-                //             "] et held_balls[",
-                //             i,
-                //             "] sont undefined.",
-                //             held_balls,
-                //             held_balls_hand
-                //         );
-                //         //     deleteEmptyBox([], held_balls_hand, i, pattern.length);
-                //         //     //held_balls_hand[i % 2].splice(~~(i / pattern.length), 1);
-                //     }
-                // }
-                if (held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] == undefined) {
-                    held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h] = [];
-                }
-                held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h][
-                    held_balls_hand[(i + h) % 2][~~(i / pattern.length) + h].length
-                ] = held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
-                //held_balls[i] = held_balls_hand[i % 2][~~(i / pattern.length)][0];
-                if (held_balls_hand[i % 2][~~(i / pattern.length)].length > 1) {
-                    if (held_balls_hand[i % 2][~~(i / pattern.length) + 1] != undefined) {
-                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
-                            ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1),
-                            ...held_balls_hand[i % 2][~~(i / pattern.length) + 1]
-                        ];
-                    } else {
-                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [];
-                        held_balls_hand[i % 2][~~(i / pattern.length) + 1] = [
-                            ...held_balls_hand[i % 2][~~(i / pattern.length)].slice(1)
-                        ];
-                    }
-                }
-                const time: number = ~~(i / pattern.length) * u;
-                const flight_time: number = h * u - d;
-                lance(
-                    held_balls[i],
-                    time, //~~(i / pattern.length) * u,
-                    flight_time, //h * u - d,
-                    vincent.hands[i % 2],
-                    vincent.hands[(i + h) % 2],
-                    u
-                );
-            }
-        }
-
-        console.log(held_balls_hand);
-    }
 
     simulator.balls = simulator.balls.filter((ball) => {
         return ball.timeline.length !== 0;
@@ -439,29 +482,44 @@ const pane = new TWEAKPANE.Pane({ container: tweakpane_container });
 
 //Default value of siteswap in siteswap_blade
 const PARAMS = {
-    Siteswap: "(66)(20)(40)"
+    Siteswap: "(6,6)(2x,2x)(4,4)"
 };
 //TODO: Handle pattern errors
 //Build siteswap_blade and check change
 const siteswap_blade = pane.addBinding(PARAMS, "Siteswap");
 siteswap_blade.on("change", (ev) => {
     if (ev.value != "") {
-        simulator.reset_pattern();
-        lance_pattern(conv_siteswap_to_pattern(ev.value), colors, u2, d2);
+        const tree = makeTree(ev.value);
+        const childType = tree.children[0].constructor.name;
+        if (childType != "ErrorNode") {
+            console.assert(
+                childType === "SequenceContext" ||
+                    childType === "Synchr_sequenceContext" ||
+                    childType === "Mirror_patternContext"
+            );
+            const visitor = new MyVisitor<pier>();
+            const pattern = visitor.visit(tree);
+            if (pattern != null) {
+                simulator.reset_pattern();
+                console.log(pattern);
+                lance_pattern(pattern, colors, u2, d2);
+            }
+        }
     }
 });
 
-const tree = makeTree("(2,0)(4,0)");
+const tree = makeTree(PARAMS.Siteswap);
 
-const visitor = new MyVisitor<pier[]>();
-const result = visitor.visit(tree);
+const visitor = new MyVisitor<pier>();
+const pattern = visitor.visit(tree);
 
-console.log(result);
-
+if (pattern != null) {
+    lance_pattern(pattern, colors, u2, d2);
+}
 // Pattern
 
 //Const pattern with default value
-const pattern = conv_siteswap_to_pattern(PARAMS.Siteswap);
+//const pattern = conv_siteswap_to_pattern(PARAMS.Siteswap);
 
 //const pattern = [[5]];
 //const pattern = [[3, 0, 3]];
@@ -473,8 +531,6 @@ const pattern = conv_siteswap_to_pattern(PARAMS.Siteswap);
 //     [6, 0, 0, 0, 1, 4], //Each sub-array represents a line of action, each index happens at the same time
 //     [6, 0, 0, 0, 1, 4]
 // ];
-
-lance_pattern(pattern, colors, u2, d2);
 
 //////////////////////////////////////////////////////////////////////////////
 // End edit here
