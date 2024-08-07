@@ -9,7 +9,8 @@ import {
     SequenceContext,
     ThrowContext,
     Repeat_sequenceContext,
-    Mirror_patternContext
+    Mirror_patternContext,
+    Multiplex_sequenceContext
 } from "./parser/PatternParser.ts";
 import { PatternVisitor } from "./parser/PatternVisitor.ts";
 
@@ -45,14 +46,19 @@ class pier {
     }
 }
 
+class thrown {
+    pier: pier[];
+
+    constructor(pier: pier[]) {
+        this.pier = pier;
+    }
+}
+const nullThrown = new thrown([new pier(0, 0, 0, 0, 0)]);
 class MyVisitor<result> extends PatternVisitor<result[][]> {
-    nulPier = new pier(0, 0, 0, 0, 0);
     time = 0;
     unit_time = 0;
     flight_time = 0.25; //(default)
     d = this.flight_time / 2;
-    //TODO: manage sequence+synchr_sequence =>
-    //if (sequence.length%2 === 1) synchr_sequence[0] = synchr_sequence[1]
     public visitPattern = (ctx: PatternContext): result[][] => {
         const nHand = 2;
         const pattern: result[][] = Array(nHand)
@@ -60,6 +66,7 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
             .map(() => Array<result>());
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
         while (true) {
+            //TODO: manage sequence+synchr_sequence =>
             //const size = pattern[0].length;
             for (const child of ctx.children) {
                 const size = pattern[0].length;
@@ -121,7 +128,7 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
                 }
                 if (childContext != null) {
                     synchr_sequence[i % nHand].push(childContext[0]);
-                    synchr_sequence[i % nHand].push(this.nulPier);
+                    synchr_sequence[i % nHand].push(nullThrown);
                     i++;
                 }
             }
@@ -139,7 +146,7 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
             for (const pier of childContext) {
                 if (pier != undefined) {
                     sequence[i % nHand].push(pier);
-                    sequence[(i + 1) % nHand].push(this.nulPier);
+                    sequence[(i + 1) % nHand].push(nullThrown);
                     i++;
                 }
             }
@@ -160,25 +167,52 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
         return repeat_sequence;
     };
 
+    public visitMultiplex_sequence = (ctx: Multiplex_sequenceContext): result => {
+        const table: pier[] = [];
+        let i2 = 0;
+        for (let i = 1; i < ctx.children.length - 1; i++) {
+            const childContext = this.visit(ctx.children[i]);
+            for (const child of childContext) {
+                table.push(child);
+                i2++;
+            }
+        }
+        this.time += this.flight_time;
+        this.unit_time++;
+        const result = new thrown(table);
+        return [result];
+    };
+
     public visitThrow = (ctx: ThrowContext): result => {
         return this.visit(ctx.children[0]);
     };
 
     public visitC_hand = (ctx: C_handContext): result => {
         const h = parseInt(ctx.INT().getText());
-        const table = [new pier(h, 0, 1, this.time, h * this.flight_time - this.d)];
-        this.time += this.flight_time;
-        this.unit_time++;
+        let table;
+        if (ctx.parent?.parent?.constructor.name === "Multiplex_sequenceContext") {
+            table = [new pier(h, 0, 1, this.time, h * this.flight_time - this.d)];
+        } else {
+            table = [new thrown([new pier(h, 0, 1, this.time, h * this.flight_time - this.d)])];
+            this.time += this.flight_time;
+            this.unit_time++;
+        }
         return table;
     };
     public visitInt = (ctx: IntContext): result => {
-        if (ctx.parent.constructor.name === "ThrowContext") {
+        if (ctx.parent?.constructor.name === "ThrowContext") {
             const table = [];
             for (let i = 0; i < ctx.children.length; i++) {
                 const h = parseInt(ctx.INT(i).getText());
-                table.push(new pier(h, 0, 0, this.time, h * this.flight_time - this.d));
-                this.time += this.flight_time;
-                this.unit_time++;
+                if (ctx.parent.parent?.constructor.name === "Multiplex_sequenceContext") {
+                    table.push(new pier(h, 0, 0, this.time, h * this.flight_time - this.d));
+                } else {
+                    table.push(
+                        new thrown([new pier(h, 0, 0, this.time, h * this.flight_time - this.d)])
+                    );
+                    this.time += this.flight_time;
+                    this.unit_time++;
+                }
             }
             return table;
         } else {
@@ -191,4 +225,4 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
     };
 }
 
-export { MyVisitor, pier, makeTree };
+export { MyVisitor, pier, makeTree, thrown };
