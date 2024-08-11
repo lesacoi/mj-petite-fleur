@@ -64,46 +64,44 @@ export class PatternParser extends antlr.Parser {
         this.enterRule(localContext, 0, PatternParser.RULE_pattern);
         let _la: number;
         try {
-            this.state = 27;
+            this.state = 25;
             this.errorHandler.sync(this);
             switch (this.interpreter.adaptivePredict(this.tokenStream, 2, this.context) ) {
             case 1:
                 this.enterOuterAlt(localContext, 1);
                 {
-                this.state = 24;
+                this.state = 20;
                 this.errorHandler.sync(this);
-                switch (this.interpreter.adaptivePredict(this.tokenStream, 1, this.context) ) {
-                case 1:
-                    {
-                    this.state = 18;
-                    this.sequence();
-                    }
-                    break;
-                case 2:
+                _la = this.tokenStream.LA(1);
+                do {
                     {
                     this.state = 20;
                     this.errorHandler.sync(this);
-                    _la = this.tokenStream.LA(1);
-                    do {
+                    switch (this.interpreter.adaptivePredict(this.tokenStream, 0, this.context) ) {
+                    case 1:
                         {
+                        this.state = 18;
+                        this.sequence();
+                        }
+                        break;
+                    case 2:
                         {
                         this.state = 19;
                         this.synchr_sequence();
                         }
-                        }
-                        this.state = 22;
-                        this.errorHandler.sync(this);
-                        _la = this.tokenStream.LA(1);
-                    } while (_la === 2);
+                        break;
                     }
-                    break;
-                }
+                    }
+                    this.state = 22;
+                    this.errorHandler.sync(this);
+                    _la = this.tokenStream.LA(1);
+                } while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 1092) !== 0));
                 }
                 break;
             case 2:
                 this.enterOuterAlt(localContext, 2);
                 {
-                this.state = 26;
+                this.state = 24;
                 this.mirror_pattern();
                 }
                 break;
@@ -129,35 +127,33 @@ export class PatternParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 35;
+            this.state = 29;
             this.errorHandler.sync(this);
-            switch (this.interpreter.adaptivePredict(this.tokenStream, 4, this.context) ) {
-            case 1:
+            _la = this.tokenStream.LA(1);
+            do {
                 {
                 this.state = 29;
-                this.sequence();
+                this.errorHandler.sync(this);
+                switch (this.interpreter.adaptivePredict(this.tokenStream, 3, this.context) ) {
+                case 1:
+                    {
+                    this.state = 27;
+                    this.sequence();
+                    }
+                    break;
+                case 2:
+                    {
+                    this.state = 28;
+                    this.synchr_sequence();
+                    }
+                    break;
                 }
-                break;
-            case 2:
-                {
+                }
                 this.state = 31;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
-                do {
-                    {
-                    {
-                    this.state = 30;
-                    this.synchr_sequence();
-                    }
-                    }
-                    this.state = 33;
-                    this.errorHandler.sync(this);
-                    _la = this.tokenStream.LA(1);
-                } while (_la === 2);
-                }
-                break;
-            }
-            this.state = 37;
+            } while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 1092) !== 0));
+            this.state = 33;
             this.match(PatternParser.T__0);
             }
         }
@@ -177,99 +173,104 @@ export class PatternParser extends antlr.Parser {
     public sequence(): SequenceContext {
         let localContext = new SequenceContext(this.context, this.state);
         this.enterRule(localContext, 4, PatternParser.RULE_sequence);
-        let _la: number;
         try {
             let alternative: number;
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 54;
+            this.state = 50;
             this.errorHandler.sync(this);
-            _la = this.tokenStream.LA(1);
+            alternative = 1;
             do {
-                {
-                this.state = 54;
-                this.errorHandler.sync(this);
-                switch (this.tokenStream.LA(1)) {
-                case PatternParser.INT:
-                    {
-                    this.state = 40;
-                    this.errorHandler.sync(this);
-                    alternative = 1;
-                    do {
-                        switch (alternative) {
-                        case 1:
-                            {
-                            {
-                            this.state = 39;
-                            this.throw_();
-                            }
-                            }
-                            break;
-                        default:
-                            throw new antlr.NoViableAltException(this);
-                        }
-                        this.state = 42;
-                        this.errorHandler.sync(this);
-                        alternative = this.interpreter.adaptivePredict(this.tokenStream, 5, this.context);
-                    } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
-                    }
-                    break;
-                case PatternParser.T__5:
-                    {
-                    this.state = 45;
-                    this.errorHandler.sync(this);
-                    alternative = 1;
-                    do {
-                        switch (alternative) {
-                        case 1:
-                            {
-                            {
-                            this.state = 44;
-                            this.multiplex_sequence();
-                            }
-                            }
-                            break;
-                        default:
-                            throw new antlr.NoViableAltException(this);
-                        }
-                        this.state = 47;
-                        this.errorHandler.sync(this);
-                        alternative = this.interpreter.adaptivePredict(this.tokenStream, 6, this.context);
-                    } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
-                    }
-                    break;
-                case PatternParser.T__1:
+                switch (alternative) {
+                case 1:
                     {
                     this.state = 50;
                     this.errorHandler.sync(this);
-                    alternative = 1;
-                    do {
-                        switch (alternative) {
-                        case 1:
-                            {
-                            {
-                            this.state = 49;
-                            this.repeat_sequence();
-                            }
-                            }
-                            break;
-                        default:
-                            throw new antlr.NoViableAltException(this);
-                        }
-                        this.state = 52;
+                    switch (this.tokenStream.LA(1)) {
+                    case PatternParser.INT:
+                        {
+                        this.state = 36;
                         this.errorHandler.sync(this);
-                        alternative = this.interpreter.adaptivePredict(this.tokenStream, 7, this.context);
-                    } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
+                        alternative = 1;
+                        do {
+                            switch (alternative) {
+                            case 1:
+                                {
+                                {
+                                this.state = 35;
+                                this.throw_();
+                                }
+                                }
+                                break;
+                            default:
+                                throw new antlr.NoViableAltException(this);
+                            }
+                            this.state = 38;
+                            this.errorHandler.sync(this);
+                            alternative = this.interpreter.adaptivePredict(this.tokenStream, 5, this.context);
+                        } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
+                        }
+                        break;
+                    case PatternParser.T__5:
+                        {
+                        this.state = 41;
+                        this.errorHandler.sync(this);
+                        alternative = 1;
+                        do {
+                            switch (alternative) {
+                            case 1:
+                                {
+                                {
+                                this.state = 40;
+                                this.multiplex_sequence();
+                                }
+                                }
+                                break;
+                            default:
+                                throw new antlr.NoViableAltException(this);
+                            }
+                            this.state = 43;
+                            this.errorHandler.sync(this);
+                            alternative = this.interpreter.adaptivePredict(this.tokenStream, 6, this.context);
+                        } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
+                        }
+                        break;
+                    case PatternParser.T__1:
+                        {
+                        this.state = 46;
+                        this.errorHandler.sync(this);
+                        alternative = 1;
+                        do {
+                            switch (alternative) {
+                            case 1:
+                                {
+                                {
+                                this.state = 45;
+                                this.repeat_sequence();
+                                }
+                                }
+                                break;
+                            default:
+                                throw new antlr.NoViableAltException(this);
+                            }
+                            this.state = 48;
+                            this.errorHandler.sync(this);
+                            alternative = this.interpreter.adaptivePredict(this.tokenStream, 7, this.context);
+                        } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
+                        }
+                        break;
+                    default:
+                        throw new antlr.NoViableAltException(this);
+                    }
                     }
                     break;
                 default:
                     throw new antlr.NoViableAltException(this);
                 }
-                }
-                this.state = 56;
+                this.state = 52;
                 this.errorHandler.sync(this);
-                _la = this.tokenStream.LA(1);
-            } while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 1092) !== 0));
+                alternative = this.interpreter.adaptivePredict(this.tokenStream, 9, this.context);
+            } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
             }
         }
         catch (re) {
@@ -292,56 +293,56 @@ export class PatternParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 58;
+            this.state = 54;
             this.match(PatternParser.T__1);
-            this.state = 65;
+            this.state = 61;
             this.errorHandler.sync(this);
             switch (this.tokenStream.LA(1)) {
             case PatternParser.INT:
+                {
+                this.state = 56;
+                this.errorHandler.sync(this);
+                _la = this.tokenStream.LA(1);
+                do {
+                    {
+                    {
+                    this.state = 55;
+                    this.throw_();
+                    }
+                    }
+                    this.state = 58;
+                    this.errorHandler.sync(this);
+                    _la = this.tokenStream.LA(1);
+                } while (_la === 10);
+                }
+                break;
+            case PatternParser.T__5:
                 {
                 this.state = 60;
-                this.errorHandler.sync(this);
-                _la = this.tokenStream.LA(1);
-                do {
-                    {
-                    {
-                    this.state = 59;
-                    this.throw_();
-                    }
-                    }
-                    this.state = 62;
-                    this.errorHandler.sync(this);
-                    _la = this.tokenStream.LA(1);
-                } while (_la === 10);
-                }
-                break;
-            case PatternParser.T__5:
-                {
-                this.state = 64;
                 this.multiplex_sequence();
                 }
                 break;
             default:
                 throw new antlr.NoViableAltException(this);
             }
-            this.state = 67;
+            this.state = 63;
             this.match(PatternParser.T__2);
-            this.state = 74;
+            this.state = 70;
             this.errorHandler.sync(this);
             switch (this.tokenStream.LA(1)) {
             case PatternParser.INT:
                 {
-                this.state = 69;
+                this.state = 65;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
                 do {
                     {
                     {
-                    this.state = 68;
+                    this.state = 64;
                     this.throw_();
                     }
                     }
-                    this.state = 71;
+                    this.state = 67;
                     this.errorHandler.sync(this);
                     _la = this.tokenStream.LA(1);
                 } while (_la === 10);
@@ -349,14 +350,14 @@ export class PatternParser extends antlr.Parser {
                 break;
             case PatternParser.T__5:
                 {
-                this.state = 73;
+                this.state = 69;
                 this.multiplex_sequence();
                 }
                 break;
             default:
                 throw new antlr.NoViableAltException(this);
             }
-            this.state = 76;
+            this.state = 72;
             this.match(PatternParser.T__3);
             }
         }
@@ -381,19 +382,19 @@ export class PatternParser extends antlr.Parser {
             let alternative: number;
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 78;
+            this.state = 74;
             this.match(PatternParser.T__1);
-            this.state = 89;
+            this.state = 85;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             do {
                 {
-                this.state = 89;
+                this.state = 85;
                 this.errorHandler.sync(this);
                 switch (this.tokenStream.LA(1)) {
                 case PatternParser.INT:
                     {
-                    this.state = 80;
+                    this.state = 76;
                     this.errorHandler.sync(this);
                     alternative = 1;
                     do {
@@ -401,7 +402,7 @@ export class PatternParser extends antlr.Parser {
                         case 1:
                             {
                             {
-                            this.state = 79;
+                            this.state = 75;
                             this.throw_();
                             }
                             }
@@ -409,7 +410,7 @@ export class PatternParser extends antlr.Parser {
                         default:
                             throw new antlr.NoViableAltException(this);
                         }
-                        this.state = 82;
+                        this.state = 78;
                         this.errorHandler.sync(this);
                         alternative = this.interpreter.adaptivePredict(this.tokenStream, 14, this.context);
                     } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
@@ -417,7 +418,7 @@ export class PatternParser extends antlr.Parser {
                     break;
                 case PatternParser.T__5:
                     {
-                    this.state = 85;
+                    this.state = 81;
                     this.errorHandler.sync(this);
                     alternative = 1;
                     do {
@@ -425,7 +426,7 @@ export class PatternParser extends antlr.Parser {
                         case 1:
                             {
                             {
-                            this.state = 84;
+                            this.state = 80;
                             this.multiplex_sequence();
                             }
                             }
@@ -433,7 +434,7 @@ export class PatternParser extends antlr.Parser {
                         default:
                             throw new antlr.NoViableAltException(this);
                         }
-                        this.state = 87;
+                        this.state = 83;
                         this.errorHandler.sync(this);
                         alternative = this.interpreter.adaptivePredict(this.tokenStream, 15, this.context);
                     } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
@@ -443,15 +444,15 @@ export class PatternParser extends antlr.Parser {
                     throw new antlr.NoViableAltException(this);
                 }
                 }
-                this.state = 91;
+                this.state = 87;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             } while (_la === 6 || _la === 10);
-            this.state = 93;
+            this.state = 89;
             this.match(PatternParser.T__4);
-            this.state = 94;
+            this.state = 90;
             this.int();
-            this.state = 95;
+            this.state = 91;
             this.match(PatternParser.T__3);
             }
         }
@@ -475,23 +476,23 @@ export class PatternParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 97;
+            this.state = 93;
             this.match(PatternParser.T__5);
-            this.state = 99;
+            this.state = 95;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             do {
                 {
                 {
-                this.state = 98;
+                this.state = 94;
                 this.throw_();
                 }
                 }
-                this.state = 101;
+                this.state = 97;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             } while (_la === 10);
-            this.state = 103;
+            this.state = 99;
             this.match(PatternParser.T__6);
             }
         }
@@ -512,20 +513,20 @@ export class PatternParser extends antlr.Parser {
         let localContext = new ThrowContext(this.context, this.state);
         this.enterRule(localContext, 12, PatternParser.RULE_throw);
         try {
-            this.state = 107;
+            this.state = 103;
             this.errorHandler.sync(this);
             switch (this.interpreter.adaptivePredict(this.tokenStream, 19, this.context) ) {
             case 1:
                 this.enterOuterAlt(localContext, 1);
                 {
-                this.state = 105;
+                this.state = 101;
                 this.int();
                 }
                 break;
             case 2:
                 this.enterOuterAlt(localContext, 2);
                 {
-                this.state = 106;
+                this.state = 102;
                 this.c_hand();
                 }
                 break;
@@ -550,9 +551,9 @@ export class PatternParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 109;
+            this.state = 105;
             this.match(PatternParser.INT);
-            this.state = 110;
+            this.state = 106;
             this.match(PatternParser.T__7);
             }
         }
@@ -576,7 +577,7 @@ export class PatternParser extends antlr.Parser {
             let alternative: number;
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 113;
+            this.state = 109;
             this.errorHandler.sync(this);
             alternative = 1;
             do {
@@ -584,7 +585,7 @@ export class PatternParser extends antlr.Parser {
                 case 1:
                     {
                     {
-                    this.state = 112;
+                    this.state = 108;
                     this.match(PatternParser.INT);
                     }
                     }
@@ -592,7 +593,7 @@ export class PatternParser extends antlr.Parser {
                 default:
                     throw new antlr.NoViableAltException(this);
                 }
-                this.state = 115;
+                this.state = 111;
                 this.errorHandler.sync(this);
                 alternative = this.interpreter.adaptivePredict(this.tokenStream, 20, this.context);
             } while (alternative !== 2 && alternative !== antlr.ATN.INVALID_ALT_NUMBER);
@@ -613,46 +614,45 @@ export class PatternParser extends antlr.Parser {
     }
 
     public static readonly _serializedATN: number[] = [
-        4,1,10,118,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
-        6,2,7,7,7,2,8,7,8,1,0,1,0,4,0,21,8,0,11,0,12,0,22,3,0,25,8,0,1,0,
-        3,0,28,8,0,1,1,1,1,4,1,32,8,1,11,1,12,1,33,3,1,36,8,1,1,1,1,1,1,
-        2,4,2,41,8,2,11,2,12,2,42,1,2,4,2,46,8,2,11,2,12,2,47,1,2,4,2,51,
-        8,2,11,2,12,2,52,4,2,55,8,2,11,2,12,2,56,1,3,1,3,4,3,61,8,3,11,3,
-        12,3,62,1,3,3,3,66,8,3,1,3,1,3,4,3,70,8,3,11,3,12,3,71,1,3,3,3,75,
-        8,3,1,3,1,3,1,4,1,4,4,4,81,8,4,11,4,12,4,82,1,4,4,4,86,8,4,11,4,
-        12,4,87,4,4,90,8,4,11,4,12,4,91,1,4,1,4,1,4,1,4,1,5,1,5,4,5,100,
-        8,5,11,5,12,5,101,1,5,1,5,1,6,1,6,3,6,108,8,6,1,7,1,7,1,7,1,8,4,
-        8,114,8,8,11,8,12,8,115,1,8,0,0,9,0,2,4,6,8,10,12,14,16,0,0,130,
-        0,27,1,0,0,0,2,35,1,0,0,0,4,54,1,0,0,0,6,58,1,0,0,0,8,78,1,0,0,0,
-        10,97,1,0,0,0,12,107,1,0,0,0,14,109,1,0,0,0,16,113,1,0,0,0,18,25,
-        3,4,2,0,19,21,3,6,3,0,20,19,1,0,0,0,21,22,1,0,0,0,22,20,1,0,0,0,
-        22,23,1,0,0,0,23,25,1,0,0,0,24,18,1,0,0,0,24,20,1,0,0,0,25,28,1,
-        0,0,0,26,28,3,2,1,0,27,24,1,0,0,0,27,26,1,0,0,0,28,1,1,0,0,0,29,
-        36,3,4,2,0,30,32,3,6,3,0,31,30,1,0,0,0,32,33,1,0,0,0,33,31,1,0,0,
-        0,33,34,1,0,0,0,34,36,1,0,0,0,35,29,1,0,0,0,35,31,1,0,0,0,36,37,
-        1,0,0,0,37,38,5,1,0,0,38,3,1,0,0,0,39,41,3,12,6,0,40,39,1,0,0,0,
-        41,42,1,0,0,0,42,40,1,0,0,0,42,43,1,0,0,0,43,55,1,0,0,0,44,46,3,
-        10,5,0,45,44,1,0,0,0,46,47,1,0,0,0,47,45,1,0,0,0,47,48,1,0,0,0,48,
-        55,1,0,0,0,49,51,3,8,4,0,50,49,1,0,0,0,51,52,1,0,0,0,52,50,1,0,0,
-        0,52,53,1,0,0,0,53,55,1,0,0,0,54,40,1,0,0,0,54,45,1,0,0,0,54,50,
-        1,0,0,0,55,56,1,0,0,0,56,54,1,0,0,0,56,57,1,0,0,0,57,5,1,0,0,0,58,
-        65,5,2,0,0,59,61,3,12,6,0,60,59,1,0,0,0,61,62,1,0,0,0,62,60,1,0,
-        0,0,62,63,1,0,0,0,63,66,1,0,0,0,64,66,3,10,5,0,65,60,1,0,0,0,65,
-        64,1,0,0,0,66,67,1,0,0,0,67,74,5,3,0,0,68,70,3,12,6,0,69,68,1,0,
-        0,0,70,71,1,0,0,0,71,69,1,0,0,0,71,72,1,0,0,0,72,75,1,0,0,0,73,75,
-        3,10,5,0,74,69,1,0,0,0,74,73,1,0,0,0,75,76,1,0,0,0,76,77,5,4,0,0,
-        77,7,1,0,0,0,78,89,5,2,0,0,79,81,3,12,6,0,80,79,1,0,0,0,81,82,1,
-        0,0,0,82,80,1,0,0,0,82,83,1,0,0,0,83,90,1,0,0,0,84,86,3,10,5,0,85,
-        84,1,0,0,0,86,87,1,0,0,0,87,85,1,0,0,0,87,88,1,0,0,0,88,90,1,0,0,
-        0,89,80,1,0,0,0,89,85,1,0,0,0,90,91,1,0,0,0,91,89,1,0,0,0,91,92,
-        1,0,0,0,92,93,1,0,0,0,93,94,5,5,0,0,94,95,3,16,8,0,95,96,5,4,0,0,
-        96,9,1,0,0,0,97,99,5,6,0,0,98,100,3,12,6,0,99,98,1,0,0,0,100,101,
-        1,0,0,0,101,99,1,0,0,0,101,102,1,0,0,0,102,103,1,0,0,0,103,104,5,
-        7,0,0,104,11,1,0,0,0,105,108,3,16,8,0,106,108,3,14,7,0,107,105,1,
-        0,0,0,107,106,1,0,0,0,108,13,1,0,0,0,109,110,5,10,0,0,110,111,5,
-        8,0,0,111,15,1,0,0,0,112,114,5,10,0,0,113,112,1,0,0,0,114,115,1,
-        0,0,0,115,113,1,0,0,0,115,116,1,0,0,0,116,17,1,0,0,0,21,22,24,27,
-        33,35,42,47,52,54,56,62,65,71,74,82,87,89,91,101,107,115
+        4,1,10,114,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        6,2,7,7,7,2,8,7,8,1,0,1,0,4,0,21,8,0,11,0,12,0,22,1,0,3,0,26,8,0,
+        1,1,1,1,4,1,30,8,1,11,1,12,1,31,1,1,1,1,1,2,4,2,37,8,2,11,2,12,2,
+        38,1,2,4,2,42,8,2,11,2,12,2,43,1,2,4,2,47,8,2,11,2,12,2,48,4,2,51,
+        8,2,11,2,12,2,52,1,3,1,3,4,3,57,8,3,11,3,12,3,58,1,3,3,3,62,8,3,
+        1,3,1,3,4,3,66,8,3,11,3,12,3,67,1,3,3,3,71,8,3,1,3,1,3,1,4,1,4,4,
+        4,77,8,4,11,4,12,4,78,1,4,4,4,82,8,4,11,4,12,4,83,4,4,86,8,4,11,
+        4,12,4,87,1,4,1,4,1,4,1,4,1,5,1,5,4,5,96,8,5,11,5,12,5,97,1,5,1,
+        5,1,6,1,6,3,6,104,8,6,1,7,1,7,1,7,1,8,4,8,110,8,8,11,8,12,8,111,
+        1,8,0,0,9,0,2,4,6,8,10,12,14,16,0,0,126,0,25,1,0,0,0,2,29,1,0,0,
+        0,4,50,1,0,0,0,6,54,1,0,0,0,8,74,1,0,0,0,10,93,1,0,0,0,12,103,1,
+        0,0,0,14,105,1,0,0,0,16,109,1,0,0,0,18,21,3,4,2,0,19,21,3,6,3,0,
+        20,18,1,0,0,0,20,19,1,0,0,0,21,22,1,0,0,0,22,20,1,0,0,0,22,23,1,
+        0,0,0,23,26,1,0,0,0,24,26,3,2,1,0,25,20,1,0,0,0,25,24,1,0,0,0,26,
+        1,1,0,0,0,27,30,3,4,2,0,28,30,3,6,3,0,29,27,1,0,0,0,29,28,1,0,0,
+        0,30,31,1,0,0,0,31,29,1,0,0,0,31,32,1,0,0,0,32,33,1,0,0,0,33,34,
+        5,1,0,0,34,3,1,0,0,0,35,37,3,12,6,0,36,35,1,0,0,0,37,38,1,0,0,0,
+        38,36,1,0,0,0,38,39,1,0,0,0,39,51,1,0,0,0,40,42,3,10,5,0,41,40,1,
+        0,0,0,42,43,1,0,0,0,43,41,1,0,0,0,43,44,1,0,0,0,44,51,1,0,0,0,45,
+        47,3,8,4,0,46,45,1,0,0,0,47,48,1,0,0,0,48,46,1,0,0,0,48,49,1,0,0,
+        0,49,51,1,0,0,0,50,36,1,0,0,0,50,41,1,0,0,0,50,46,1,0,0,0,51,52,
+        1,0,0,0,52,50,1,0,0,0,52,53,1,0,0,0,53,5,1,0,0,0,54,61,5,2,0,0,55,
+        57,3,12,6,0,56,55,1,0,0,0,57,58,1,0,0,0,58,56,1,0,0,0,58,59,1,0,
+        0,0,59,62,1,0,0,0,60,62,3,10,5,0,61,56,1,0,0,0,61,60,1,0,0,0,62,
+        63,1,0,0,0,63,70,5,3,0,0,64,66,3,12,6,0,65,64,1,0,0,0,66,67,1,0,
+        0,0,67,65,1,0,0,0,67,68,1,0,0,0,68,71,1,0,0,0,69,71,3,10,5,0,70,
+        65,1,0,0,0,70,69,1,0,0,0,71,72,1,0,0,0,72,73,5,4,0,0,73,7,1,0,0,
+        0,74,85,5,2,0,0,75,77,3,12,6,0,76,75,1,0,0,0,77,78,1,0,0,0,78,76,
+        1,0,0,0,78,79,1,0,0,0,79,86,1,0,0,0,80,82,3,10,5,0,81,80,1,0,0,0,
+        82,83,1,0,0,0,83,81,1,0,0,0,83,84,1,0,0,0,84,86,1,0,0,0,85,76,1,
+        0,0,0,85,81,1,0,0,0,86,87,1,0,0,0,87,85,1,0,0,0,87,88,1,0,0,0,88,
+        89,1,0,0,0,89,90,5,5,0,0,90,91,3,16,8,0,91,92,5,4,0,0,92,9,1,0,0,
+        0,93,95,5,6,0,0,94,96,3,12,6,0,95,94,1,0,0,0,96,97,1,0,0,0,97,95,
+        1,0,0,0,97,98,1,0,0,0,98,99,1,0,0,0,99,100,5,7,0,0,100,11,1,0,0,
+        0,101,104,3,16,8,0,102,104,3,14,7,0,103,101,1,0,0,0,103,102,1,0,
+        0,0,104,13,1,0,0,0,105,106,5,10,0,0,106,107,5,8,0,0,107,15,1,0,0,
+        0,108,110,5,10,0,0,109,108,1,0,0,0,110,111,1,0,0,0,111,109,1,0,0,
+        0,111,112,1,0,0,0,112,17,1,0,0,0,21,20,22,25,29,31,38,43,48,50,52,
+        58,61,67,70,78,83,85,87,97,103,111
     ];
 
     private static __ATN: antlr.ATN;
@@ -678,8 +678,14 @@ export class PatternContext extends antlr.ParserRuleContext {
     public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
         super(parent, invokingState);
     }
-    public sequence(): SequenceContext | null {
-        return this.getRuleContext(0, SequenceContext);
+    public sequence(): SequenceContext[];
+    public sequence(i: number): SequenceContext | null;
+    public sequence(i?: number): SequenceContext[] | SequenceContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(SequenceContext);
+        }
+
+        return this.getRuleContext(i, SequenceContext);
     }
     public synchr_sequence(): Synchr_sequenceContext[];
     public synchr_sequence(i: number): Synchr_sequenceContext | null;
@@ -720,8 +726,14 @@ export class Mirror_patternContext extends antlr.ParserRuleContext {
     public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
         super(parent, invokingState);
     }
-    public sequence(): SequenceContext | null {
-        return this.getRuleContext(0, SequenceContext);
+    public sequence(): SequenceContext[];
+    public sequence(i: number): SequenceContext | null;
+    public sequence(i?: number): SequenceContext[] | SequenceContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(SequenceContext);
+        }
+
+        return this.getRuleContext(i, SequenceContext);
     }
     public synchr_sequence(): Synchr_sequenceContext[];
     public synchr_sequence(i: number): Synchr_sequenceContext | null;

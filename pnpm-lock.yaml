@@ -11,9 +11,6 @@ importers:
       '@tweakpane/plugin-essentials':
         specifier: ^0.2.1
         version: 0.2.1(tweakpane@4.0.3)
-      antlr4:
-        specifier: 4.13.1-patch-1
-        version: 4.13.1-patch-1
       antlr4ng:
         specifier: ^3.0.4
         version: 3.0.4(antlr4ng-cli@2.0.0)
@@ -447,10 +444,6 @@ packages:
   ansi-styles@4.3.0:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
-
-  antlr4@4.13.1-patch-1:
-    resolution: {integrity: sha512-OjFLWWLzDMV9rdFhpvroCWR4ooktNg9/nvVYSA5z28wuVpU36QUNuioR1XLnQtcjVlf8npjyz593PxnU/f/Cow==}
-    engines: {node: '>=16'}
 
   antlr4ng-cli@2.0.0:
     resolution: {integrity: sha512-oAt5OSSYhRQn1PgahtpAP4Vp3BApCoCqlzX7Q8ZUWWls4hX59ryYuu0t7Hwrnfk796OxP/vgIJaqxdltd/oEvQ==}
@@ -1265,8 +1258,6 @@ snapshots:
   ansi-styles@4.3.0:
     dependencies:
       color-convert: 2.0.1
-
-  antlr4@4.13.1-patch-1: {}
 
   antlr4ng-cli@2.0.0: {}
 

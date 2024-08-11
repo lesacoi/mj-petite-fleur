@@ -74,7 +74,11 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
                 for (let i = 0; i < nHand; i++) {
                     if (childContext != null) {
                         for (const pier of childContext[i]) {
-                            pattern[(i + (size % nHand)) % nHand].push(pier);
+                            if (child.constructor.name === "Synchr_sequenceContext") {
+                                pattern[i % nHand].push(pier);
+                            } else {
+                                pattern[(i + (size % nHand)) % nHand].push(pier);
+                            }
                         }
                     }
                 }
@@ -121,6 +125,7 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
                     this.time -= this.flight_time;
                     this.unit_time--;
                     childContext = this.visit(child);
+                    // Ajouter aux compteurs le lancer null
                     this.time += this.flight_time;
                     this.unit_time++;
                 } else {

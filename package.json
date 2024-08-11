@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@tweakpane/plugin-essentials": "^0.2.1",
-    "antlr4": "4.13.1-patch-1",
     "antlr4ng": "^3.0.4",
     "functional-red-black-tree": "^1.0.1",
     "three": "^0.163.0",
