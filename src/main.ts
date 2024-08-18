@@ -197,6 +197,7 @@ const PARAMS = {
 const siteswap_blade = pane.addBinding(PARAMS, "Siteswap", { index: 5 });
 siteswap_blade.on("change", (ev) => {
     if (ev.value != "") {
+        console.log(ev.value);
         const tree = makeTree(ev.value);
         const childType = tree.children[0].constructor.name;
         if (childType != "ErrorNode") {
@@ -205,20 +206,29 @@ siteswap_blade.on("change", (ev) => {
                     childType === "Synchr_sequenceContext" ||
                     childType === "Mirror_patternContext"
             );
-            const visitor = new MyVisitor<thrown>();
-            const pattern = visitor.visit(tree);
-            if (pattern != null) {
-                console.log(pattern);
-                lance_pattern(
-                    pattern,
-                    colors,
-                    u2,
-                    d2,
-                    vincent,
-                    simulator,
-                    b_invalid_siteswap,
-                    scene
-                );
+            try {
+                const visitor = new MyVisitor<thrown>();
+                const pattern = visitor.visit(tree);
+
+                music.currentTime = 0;
+                if (pattern != null) {
+                    console.log(pattern);
+                    lance_pattern(
+                        pattern,
+                        colors,
+                        u2,
+                        d2,
+                        vincent,
+                        simulator,
+                        b_invalid_siteswap,
+                        scene
+                    );
+                }
+            } catch (e) {
+                console.error(e);
+                b_invalid_siteswap.hidden = !b_invalid_siteswap.hidden;
+                //siteswap_blade.hidden = !siteswap_blade.hidden;
+                return;
             }
         }
     }

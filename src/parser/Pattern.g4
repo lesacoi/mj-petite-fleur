@@ -10,7 +10,11 @@ synchr_sequence:
 	'(' (throw+ | multiplex_sequence) ',' (
 		throw+
 		| multiplex_sequence
-	) ')';
+	) ')'
+	| '(' (throw+ | multiplex_sequence) ',' (
+		throw+
+		| multiplex_sequence
+	) ')' HAND INT;
 repeat_sequence:
 	'(' (throw+ | multiplex_sequence+)+ '^' int ')';
 //TODO: add synchr_sequence at repeat_sequence and edit ParserLexerPattern.ts
@@ -19,4 +23,5 @@ NEWLINE: [\r\n]+ -> skip;
 throw: int | c_hand;
 c_hand: INT 'x';
 int: INT+;
+HAND: 'R' | 'L';
 INT: [0-9];

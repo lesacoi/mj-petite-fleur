@@ -68,9 +68,9 @@ pnpm build
 
 ## To modify the siteswap parser.
 
-The siteswap parser uses ANTLR to generate parsers in many languages (namely Typescript in our case, but also python), but also as a runtime package to parse expressions for that grammar.
+The siteswap parser uses ANTLR4ng to generate parsers in many languages (namely Typescript in our case, but also python), but also as a runtime package to parse expressions for that grammar.
 
-To install ANTLR :
+To install ANTLR4ng :
 
 ## TODO
 

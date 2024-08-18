@@ -13,6 +13,7 @@ import {
     Multiplex_sequenceContext
 } from "./parser/PatternParser.ts";
 import { PatternVisitor } from "./parser/PatternVisitor.ts";
+import { isDefined } from "tone";
 
 function makeTree(c: string): PatternContext {
     const inputStream = CharStream.fromString(c);
@@ -59,6 +60,7 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
     unit_time = 0;
     flight_time = 0.25; //(default)
     d = this.flight_time / 2;
+    hand: undefined | number = undefined;
     public visitPattern = (ctx: PatternContext): result[][] => {
         const nHand = 2;
         const pattern: result[][] = Array(nHand)
@@ -72,14 +74,23 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
                 const size = pattern[0].length;
                 const childContext = this.visit(child);
                 for (let i = 0; i < nHand; i++) {
+                    let isSynchr = false;
                     if (childContext != null) {
                         for (const pier of childContext[i]) {
                             if (child.constructor.name === "Synchr_sequenceContext") {
                                 pattern[i % nHand].push(pier);
+                                isSynchr = true;
                             } else {
-                                pattern[(i + (size % nHand)) % nHand].push(pier);
+                                if (isDefined(this.hand)) {
+                                    pattern[this.hand % nHand].push(pier);
+                                } else {
+                                    pattern[(i + (size % nHand)) % nHand].push(pier);
+                                }
                             }
                         }
+                    }
+                    if (isDefined(this.hand) && !isSynchr) {
+                        this.hand++;
                     }
                 }
             }
@@ -117,6 +128,7 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
             .fill(null)
             .map(() => Array<result>());
         let i = 0;
+
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         for (const child of ctx.children) {
             if (child.constructor.name != "TerminalNode") {
@@ -136,6 +148,19 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
                     synchr_sequence[i % nHand].push(nullThrown);
                     i++;
                 }
+            } else if (isDefined(this.hand) && !isNaN(parseInt(String(child)))) {
+                const h = parseInt(String(child));
+                synchr_sequence[this.hand].push(
+                    new thrown([new pier(h, 0, 0, this.time, h * this.flight_time - this.d)])
+                );
+                this.time += this.flight_time;
+                this.unit_time++;
+                synchr_sequence[(this.hand + 1) % 2].push(nullThrown);
+                this.hand++;
+            } else if (String(child) === "R") {
+                this.hand = 0;
+            } else if (String(child) === "L") {
+                this.hand = 1;
             }
         }
         return synchr_sequence;
@@ -174,12 +199,10 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
 
     public visitMultiplex_sequence = (ctx: Multiplex_sequenceContext): result => {
         const table: pier[] = [];
-        let i2 = 0;
         for (let i = 1; i < ctx.children.length - 1; i++) {
             const childContext = this.visit(ctx.children[i]);
-            for (const child of childContext) {
+            for (const child of childContext!) {
                 table.push(child);
-                i2++;
             }
         }
         this.time += this.flight_time;
@@ -208,7 +231,7 @@ class MyVisitor<result> extends PatternVisitor<result[][]> {
         if (ctx.parent?.constructor.name === "ThrowContext") {
             const table = [];
             for (let i = 0; i < ctx.children.length; i++) {
-                const h = parseInt(ctx.INT(i).getText());
+                const h = parseInt(ctx.INT(i)!.getText());
                 if (ctx.parent.parent?.constructor.name === "Multiplex_sequenceContext") {
                     table.push(new pier(h, 0, 0, this.time, h * this.flight_time - this.d));
                 } else {
